@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>FindWeed — App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #2A2418;
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(194,94,44,0.18), transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(70,90,56,0.30), transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    font-family: 'Inter Tight', system-ui, sans-serif;
+    color: #F7F2E7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding: 32px 16px 60px; gap: 28px;
+  }
+  .header {
+    width: 100%; max-width: 1280px; display: flex; align-items: center; justify-content: space-between;
+    color: rgba(247,242,231,0.7); font-size: 13px;
+  }
+  .header .title { font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px; color: #F7F2E7; letter-spacing: -0.02em; }
+  .header .nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  .header .nav button {
+    background: rgba(247,242,231,0.08); border: 1px solid rgba(247,242,231,0.10);
+    color: #F7F2E7; padding: 7px 12px; border-radius: 100px; font-family: inherit;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+  }
+  .header .nav button.active { background: #C25E2C; border-color: #C25E2C; }
+  .grid {
+    width: 100%; max-width: 1280px;
+    display: grid; gap: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    justify-items: center;
+  }
+  .frame-label {
+    font-family: 'Inter Tight', sans-serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.10em; text-transform: uppercase; color: rgba(247,242,231,0.55);
+    margin-bottom: 8px; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="app/data.js"></script>
+<script src="app/tokens.js"></script>
+
+<script type="text/babel" src="app/CannabisLeaf.jsx"></script>
+<script type="text/babel" src="app/icons.jsx"></script>
+<script type="text/babel" src="app/AppLogo.jsx"></script>
+<script type="text/babel" src="app/ios-frame.jsx"></script>
+<script type="text/babel" src="app/tweaks-panel.jsx"></script>
+<script type="text/babel" src="app/Onboarding.jsx"></script>
+<script type="text/babel" src="app/Home.jsx"></script>
+<script type="text/babel" src="app/SpotDetail.jsx"></script>
+<script type="text/babel" src="app/Search.jsx"></script>
+<script type="text/babel" src="app/Screens.jsx"></script>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "view": "all"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tw, setTw] = useTweaks(TWEAK_DEFAULTS);
+  const dark = tw.theme === "dark";
+  const view = tw.view;
+
+  const screens = [
+    { id: "onboard", label: "01 · Onboarding", w: 393, h: 852,
+      render: () => <Onboarding dark={dark} onDone={() => {}} /> },
+    { id: "home", label: "02 · Domů — mapa + feed", w: 393, h: 852,
+      render: () => <Home dark={dark} /> },
+    { id: "detail", label: "03 · Detail spotu", w: 393, h: 852,
+      render: () => <SpotDetail dark={dark} spotId={1} /> },
+    { id: "search", label: "04 · Hledat + filtry", w: 393, h: 852,
+      render: () => <SearchScreen dark={dark} /> },
+    { id: "categories", label: "05 · Procházet kategorie", w: 393, h: 852,
+      render: () => <CategoriesScreen dark={dark} /> },
+    { id: "saved", label: "06 · Knihovna / uloženo", w: 393, h: 852,
+      render: () => <SavedScreen dark={dark} /> },
+    { id: "profile", label: "07 · Profil", w: 393, h: 852,
+      render: () => <ProfileScreen dark={dark} /> },
+    { id: "submit", label: "08 · Přidat nový spot", w: 393, h: 852,
+      render: () => <SubmitScreen dark={dark} /> },
+  ];
+
+  const filtered = view === "all" ? screens : screens.filter(s => s.id === view);
+
+  return (
+    <div className="stage">
+      <div className="header">
+        <div className="title">FindWeed · Mobile App</div>
+        <div className="nav">
+          <button className={view === "all" ? "active" : ""} onClick={() => setTw("view", "all")}>Vše</button>
+          {screens.map(s => (
+            <button key={s.id} className={view === s.id ? "active" : ""} onClick={() => setTw("view", s.id)}>{s.label.split(" · ")[0]}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid">
+        {filtered.map(s => (
+          <div key={s.id} data-screen-label={s.label}>
+            <div className="frame-label">{s.label}</div>
+            <IOSDevice width={s.w} height={s.h} dark={dark}>
+              {s.render()}
+            </IOSDevice>
+          </div>
+        ))}
+      </div>
+
+      <TweaksPanel>
+        <TweakSection title="Téma">
+          <TweakRadio name="theme" value={tw.theme} onChange={(v) => setTw("theme", v)}
+                     options={[{value: "light", label: "Cream"}, {value: "dark", label: "Moss"}]} />
+        </TweakSection>
+        <TweakSection title="Zobrazit">
+          <TweakSelect value={tw.view} onChange={(v) => setTw("view", v)}
+                      options={[
+                        {value: "all", label: "Všech 8 obrazovek"},
+                        ...screens.map(s => ({value: s.id, label: s.label})),
+                      ]} />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+</body>
+</html>

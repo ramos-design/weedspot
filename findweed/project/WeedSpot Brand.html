@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<title>WeedSpot — Brand v0.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,500;1,9..144,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1812; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; color: #1A1812; }
+  * { box-sizing: border-box; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="brand/tokens.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="brand/CoverBoard.jsx"></script>
+<script type="text/babel" src="brand/CannabisLeaf.jsx"></script>
+<script type="text/babel" src="brand/Logo7Locator.jsx"></script>
+<script type="text/babel" src="brand/Logo12LeafRadar.jsx"></script>
+<script type="text/babel" src="brand/Logo13LeafBroadcast.jsx"></script>
+<script type="text/babel" src="brand/Logo14LeafPing.jsx"></script>
+<script type="text/babel" src="brand/Logo15LeafConstellation.jsx"></script>
+<script type="text/babel" src="brand/LogoSketchA.jsx"></script>
+<script type="text/babel" src="brand/LogoSketchB.jsx"></script>
+<script type="text/babel" src="brand/LogoSketchC.jsx"></script>
+<script type="text/babel" src="brand/LogoSketchD.jsx"></script>
+<script type="text/babel" src="brand/LogoLockup.jsx"></script>
+<script type="text/babel" src="brand/PaletteBoard.jsx"></script>
+<script type="text/babel" src="brand/TypographyBoard.jsx"></script>
+<script type="text/babel" src="brand/VoiceBoard.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { DesignCanvas, DCSection, DCArtboard } = window;
+
+function App() {
+  return (
+    <DesignCanvas title="WeedSpot — Brand identity v0.2" subtitle="Lístek konopí vyzařující signál — 5 variant na 3 pozadích">
+
+      <DCSection id="cover" title="00 · Cover">
+        <DCArtboard id="cover-1" label="Brand cover" width={1080} height={720}>
+          <CoverBoard />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="logos-sketch" title="01 · Vaše směr — závorky/signál + lístek (4 varianty)">
+        <DCArtboard id="sketch-a" label="Směr A · Dvojité závorky (dle náčrtu)" width={1080} height={460}>
+          <LogoLockup
+            Logo={LogoSketchA}
+            name="Směr A · Double parens"
+            tagline="Přesně dle vašeho náčrtu — dva páry závorek jako vyzařující signál, list konopí uprostřed, mono černá, masivní serif."
+          />
+        </DCArtboard>
+
+        <DCArtboard id="sketch-b" label="Směr B · Závorky + akcent" width={1080} height={460}>
+          <LogoLockup
+            Logo={LogoSketchB}
+            name="Směr B · Parens + accent"
+            tagline="Stejné řešení, ale list je v terakotě a wordmark má barevnou tečku. Může ladit s brand paletou."
+          />
+        </DCArtboard>
+
+        <DCArtboard id="sketch-c" label="Směr C · Single parens (clean)" width={1080} height={460}>
+          <LogoLockup
+            Logo={LogoSketchC}
+            name="Směr C · Single parens"
+            tagline="Jen jeden pár tlustších závorek. Modernější, kompaktnější, využitelnejší na malých velikostech."
+          />
+        </DCArtboard>
+
+        <DCArtboard id="sketch-d" label="Směr D · Signální čárky" width={1080} height={460}>
+          <LogoLockup
+            Logo={LogoSketchD}
+            name="Směr D · Signal lines"
+            tagline="Místo závorek 3 čárky po stranách jako wifi/signál. Drobnější, tišší, lifestyle."
+          />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="logos" title="01b · Původní lístek + signál — 5 variant">
+        <DCArtboard id="logo-7" label="Směr A · Locator (původní L7, ale s lístkem)" width={1080} height={460}>
+          <LogoLockup
+            Logo={Logo7Locator}
+            name="Směr A · Locator (updated)"
+            tagline="Lístek konopí uprostřed, kolem 3 koncentrické signal arcs. Klid, balanc, čitelnost."
+          />
+        </DCArtboard>
+
+        <DCArtboard id="logo-12" label="Směr B · Leaf Radar (silnější signál)" width={1080} height={460}>
+          <LogoLockup
+            Logo={Logo12LeafRadar}
+            name="Směr B · Leaf Radar"
+            tagline={'Plné soustředné kruhy + pětihrotý lístek. Nejvíc „radar / mapa“ feel.'}
+          />
+        </DCArtboard>
+
+        <DCArtboard id="logo-13" label="Směr C · Broadcast (vlny vlevo i vpravo)" width={1080} height={460}>
+          <LogoLockup
+            Logo={Logo13LeafBroadcast}
+            name="Směr C · Broadcast"
+            tagline={'Lístek vysílá vlny doprava i doleva. Dynamika, expanze, „tady to žije“.'}
+          />
+        </DCArtboard>
+
+        <DCArtboard id="logo-14" label="Směr D · Ping (AirDrop-style nahoru)" width={1080} height={460}>
+          <LogoLockup
+            Logo={Logo14LeafPing}
+            name="Směr D · Ping"
+            tagline="Lístek dole + vlny nahoru jako ping. Asymetrie, směr, akce."
+          />
+        </DCArtboard>
+
+        <DCArtboard id="logo-15" label="Směr E · Constellation (mapa hot-spotů)" width={1080} height={460}>
+          <LogoLockup
+            Logo={Logo15LeafConstellation}
+            name="Směr E · Constellation"
+            tagline="Lístek + tečky kolem jako rozeseté friendly spoty. Mapový metafor přímo v logu."
+          />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="palette" title="02 · Paleta — earthy, café, evropská">
+        <DCArtboard id="palette-1" label="Color tokens" width={1080} height={780}>
+          <PaletteBoard />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="type" title="03 · Typografie — Fraunces × DM Sans">
+        <DCArtboard id="type-1" label="Type system" width={1080} height={1180}>
+          <TypographyBoard />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="voice" title="04 · Tone of voice — kámoš, ne dispenzář">
+        <DCArtboard id="voice-1" label="Voice & taglines" width={1080} height={920}>
+          <VoiceBoard />
+        </DCArtboard>
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

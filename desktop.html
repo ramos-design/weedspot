@@ -1,0 +1,1384 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<title>WeedSpot — najdi své místo. Mapa friendly podniků v Česku a Evropě.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#F7F2E7" />
+<meta name="description" content="WeedSpot — komunitní mapa dispenzářů, CBD obchodů, kaváren, restaurací a coffeeshopů, které mají rády trávu. V Česku a po Evropě."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream-50:  #F7F2E7;
+    --cream-100: #EFE8D6;
+    --cream-200: #E4D9BD;
+    --sand-200:  #D6CDB8;
+    --sand-300:  #CDBE99;
+    --moss-100:  #DCE3CD;
+    --moss-600:  #52693E;
+    --moss-700:  #3D5132;
+    --moss-800:  #2C3A26;
+    --moss-900:  #1F2A1C;
+    --terracotta-100: #F2D8C7;
+    --terracotta-500: #D17251;
+    --terracotta-600: #B85A3C;
+    --terracotta-700: #94422A;
+    --mustard-100: #F2E5BD;
+    --mustard-500: #E0A93A;
+    --mustard-600: #C8902A;
+    --bark-600: #5C4F3A;
+    --bark-900: #332C20;
+    --ink: #1A1812;
+
+    --bg: var(--cream-50);
+    --fg: var(--ink);
+    --muted: var(--bark-600);
+    --surface: #FFFFFF;
+    --surface-2: var(--cream-100);
+    --border: var(--cream-200);
+    --accent: var(--terracotta-600);
+    --accent-2: var(--mustard-600);
+    --primary: var(--moss-600);
+
+    --max-w: 1240px;
+  }
+  html.dark {
+    --bg: var(--moss-900);
+    --fg: var(--cream-50);
+    --muted: rgba(247,242,231,0.66);
+    --surface: var(--moss-800);
+    --surface-2: var(--moss-700);
+    --border: rgba(247,242,231,0.10);
+    --accent: var(--terracotta-500);
+    --accent-2: var(--mustard-500);
+    --primary: #9AAE6E;
+  }
+  html, body { margin: 0; padding: 0; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+  }
+  button, input, textarea { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+
+  h1, h2, h3, h4 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700; letter-spacing: -0.025em;
+    line-height: 1.05; margin: 0;
+  }
+
+  .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+
+  /* ─── HEADER ─────────────────────────────────────── */
+  header.site {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(247, 242, 231, 0.78);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  html.dark header.site { background: rgba(31, 42, 28, 0.78); }
+  header .row {
+    display: flex; align-items: center; gap: 28px;
+    height: 72px;
+  }
+  nav.primary { display: flex; gap: 28px; margin-left: 40px; flex: 1; }
+  nav.primary a {
+    font-size: 14px; font-weight: 500; color: var(--fg);
+    transition: color 0.15s;
+  }
+  nav.primary a:hover { color: var(--accent); }
+  header .actions { display: flex; gap: 8px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 0 18px; height: 42px; border-radius: 100px;
+    font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid transparent;
+    transition: transform 0.12s, background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.primary { background: var(--accent); color: #F7F2E7; }
+  .btn.primary:hover { background: var(--terracotta-700); }
+  .btn.ghost { background: transparent; border-color: var(--border); color: var(--fg); }
+  .btn.ghost:hover { background: var(--surface-2); }
+  .btn.lg { height: 52px; padding: 0 22px; font-size: 15px; }
+
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 100px;
+    background: transparent; border: 1px solid var(--border);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    color: var(--fg);
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+
+  .logo {
+    display: inline-flex; align-items: center; gap: 4px; line-height: 1;
+    color: var(--fg);
+  }
+  .logo svg { flex-shrink: 0; overflow: visible; }
+  .logo span.word {
+    font-family: 'Fraunces', serif; font-weight: 800; font-size: 22px; letter-spacing: -0.025em;
+  }
+  .logo span.dot { color: var(--accent); }
+
+  /* ─── HERO ───────────────────────────────────────── */
+  section.hero {
+    position: relative; overflow: hidden;
+    padding: 80px 0 100px;
+  }
+  .hero .deco-pin { position: absolute; right: -120px; top: 60px; opacity: 0.08; pointer-events: none; }
+  .hero .grid {
+    display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 60px; align-items: center;
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 100px;
+    background: var(--moss-100); color: var(--moss-700);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  html.dark .eyebrow { background: rgba(154,174,110,0.18); color: var(--primary); }
+  .hero h1 {
+    font-size: clamp(48px, 6vw, 84px);
+    font-weight: 700; margin-top: 22px;
+  }
+  .hero h1 em {
+    font-style: italic; color: var(--accent); font-weight: 600;
+  }
+  .hero p.lead {
+    font-size: 19px; color: var(--muted);
+    margin-top: 22px; max-width: 540px;
+  }
+  .hero .cta-row { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+  .hero .stats {
+    display: flex; gap: 36px; margin-top: 44px; padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+  .stat-item .num {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 32px; letter-spacing: -0.025em;
+    color: var(--fg);
+  }
+  .stat-item .lab { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* Hero artwork — stylized phone with map preview */
+  .hero-art {
+    position: relative; aspect-ratio: 4/5;
+    border-radius: 32px; overflow: hidden;
+    background: linear-gradient(160deg, var(--moss-700), var(--moss-900));
+    box-shadow: 0 30px 80px rgba(28,42,30,0.30), 0 8px 24px rgba(28,42,30,0.20);
+  }
+  .hero-art .map-bg { position: absolute; inset: 0; }
+  .hero-art .float-card {
+    position: absolute; left: 24px; right: 24px; bottom: 24px;
+    background: var(--surface); border-radius: 20px; padding: 16px;
+    display: flex; gap: 14px; align-items: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.30);
+  }
+  .hero-art .float-card .ic-thumb {
+    width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0;
+    background: var(--terracotta-600); color: #F7F2E7;
+    display: flex; align-items: center; justify-content: center; font-size: 26px;
+  }
+  .hero-art .float-card .name {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 17px; letter-spacing: -0.02em;
+  }
+  .hero-art .float-card .meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .hero-art .pin-mark {
+    position: absolute; padding: 0; background: transparent; border: none;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.30));
+  }
+  .hero-art .you-here {
+    position: absolute; left: 50%; top: 38%; transform: translate(-50%,-50%);
+    width: 22px; height: 22px; border-radius: 100px; background: var(--accent);
+    border: 3px solid white;
+    box-shadow: 0 0 0 8px rgba(196,107,82,0.20), 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .hero-art .ping {
+    position: absolute; left: 50%; top: 38%; transform: translate(-50%,-50%);
+    width: 22px; height: 22px; border-radius: 100px; background: var(--accent);
+    opacity: 0.5; animation: ping 2.4s cubic-bezier(0,0,0.2,1) infinite;
+  }
+  @keyframes ping {
+    0%   { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
+    100% { transform: translate(-50%,-50%) scale(4.5); opacity: 0; }
+  }
+
+  /* ─── SECTION TITLES ─────────────────────────────── */
+  section { padding: 80px 0; }
+  section.tight { padding: 56px 0; }
+  .section-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 36px; }
+  .section-head h2 { font-size: clamp(32px, 3.6vw, 48px); }
+  .section-head .lead { color: var(--muted); margin-top: 10px; max-width: 520px; font-size: 16px; }
+  .section-head .right { flex-shrink: 0; }
+
+  /* ─── FEATURES (3 cols) ──────────────────────────── */
+  .features {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .feature {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 22px; padding: 28px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .feature:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(28,42,30,0.10); }
+  .feature .ic-wrap {
+    width: 52px; height: 52px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .feature h3 { font-size: 22px; }
+  .feature p { color: var(--muted); margin: 10px 0 0; font-size: 15px; }
+
+  /* ─── CATEGORIES ─────────────────────────────────── */
+  .cat-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  }
+  .cat-card {
+    border-radius: 20px; padding: 24px; min-height: 180px;
+    position: relative; overflow: hidden; cursor: pointer;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 14px;
+    transition: transform 0.15s;
+  }
+  .cat-card:hover { transform: translateY(-3px); }
+  .cat-card .big-icon { position: absolute; right: -10px; bottom: -14px; font-size: 100px; opacity: 0.18; line-height: 1; }
+  .cat-card .label { font-family: 'Fraunces', serif; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; line-height: 1.1; }
+  .cat-card .count { font-size: 12px; opacity: 0.7; margin-top: 4px; font-weight: 500; }
+  .cat-card .cta {
+    align-self: flex-start; padding: 6px 12px;
+    background: rgba(255,255,255,0.55); border-radius: 100px;
+    font-size: 12px; font-weight: 700; position: relative; z-index: 1;
+  }
+
+  /* ─── MAP PREVIEW SECTION ────────────────────────── */
+  .map-preview {
+    position: relative; border-radius: 28px; overflow: hidden;
+    aspect-ratio: 16/8; background: var(--surface-2);
+    box-shadow: 0 24px 60px rgba(28,42,30,0.14);
+    border: 1px solid var(--border);
+  }
+  .map-preview .pin {
+    position: absolute; transform: translate(-50%,-100%);
+    background: transparent; border: none; padding: 0; cursor: pointer;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    transition: transform 0.15s;
+  }
+  .map-preview .pin:hover { transform: translate(-50%,-110%) scale(1.12); }
+  .map-preview .legend {
+    position: absolute; left: 24px; top: 24px;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+    border-radius: 16px; padding: 14px 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    display: flex; flex-direction: column; gap: 8px;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  html.dark .map-preview .legend { background: rgba(31,42,28,0.86); border-color: rgba(247,242,231,0.10); }
+  .map-preview .legend .row {
+    display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--fg); font-weight: 500;
+  }
+  .map-preview .legend .dot { width: 10px; height: 10px; border-radius: 100px; }
+  .map-preview .open-cta {
+    position: absolute; right: 24px; bottom: 24px;
+  }
+
+  /* ─── FEATURED SPOTS ─────────────────────────────── */
+  .spot-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+  }
+  .spot-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 22px; overflow: hidden; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex; flex-direction: column;
+  }
+  .spot-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(28,42,30,0.12); }
+  .spot-photo { height: 200px; position: relative; flex-shrink: 0; overflow: hidden; }
+  .spot-photo .gradient { position: absolute; inset: 0; background: radial-gradient(circle at 25% 20%, rgba(255,255,255,0.20), transparent 55%), radial-gradient(circle at 75% 90%, rgba(0,0,0,0.18), transparent 60%); }
+  .spot-photo .ic { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 72px; opacity: 0.45; color: #F7F2E7; }
+  .spot-photo .badge {
+    position: absolute; top: 14px; left: 14px;
+    background: rgba(255,255,255,0.94); color: var(--ink);
+    padding: 5px 11px; border-radius: 100px; font-size: 11px; font-weight: 700;
+  }
+  .spot-photo .save {
+    position: absolute; top: 12px; right: 12px;
+    width: 38px; height: 38px; border-radius: 100px; background: rgba(255,255,255,0.94);
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--ink);
+  }
+  .spot-photo .save.saved { color: var(--accent); }
+  .spot-body { padding: 18px 20px 22px; flex: 1; display: flex; flex-direction: column; }
+  .spot-body .name { font-family: 'Fraunces', serif; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; line-height: 1.15; }
+  .spot-body .meta { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .spot-body .meta .open { color: var(--moss-600); font-weight: 600; }
+  .spot-body .meta .closed { color: var(--terracotta-700); font-weight: 600; }
+  .spot-body .desc { color: var(--muted); margin-top: 10px; font-size: 14px; flex: 1; }
+  .spot-body .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .spot-body .tag {
+    font-size: 11px; font-weight: 500; color: var(--muted);
+    padding: 4px 10px; border-radius: 100px;
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+
+  /* ─── HOW IT WORKS ───────────────────────────────── */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .step .num {
+    font-family: 'Fraunces', serif; font-weight: 800; font-size: 56px;
+    color: var(--accent); letter-spacing: -0.04em; line-height: 1;
+  }
+  .step h3 { font-size: 22px; margin-top: 8px; }
+  .step p { color: var(--muted); margin-top: 8px; font-size: 15px; }
+
+  /* ─── REVIEWS ────────────────────────────────────── */
+  .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .review {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 22px;
+  }
+  .review .stars { color: var(--mustard-600); font-size: 16px; letter-spacing: 1px; }
+  .review .text { font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px; line-height: 1.45; margin-top: 10px; letter-spacing: -0.005em; }
+  .review .author { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+  .review .av { width: 38px; height: 38px; border-radius: 100px; color: #F7F2E7; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-weight: 700; font-size: 16px; }
+  .review .who { font-size: 13px; font-weight: 600; }
+  .review .when { font-size: 12px; color: var(--muted); }
+
+  /* ─── CTA BANNER ─────────────────────────────────── */
+  .cta-banner {
+    margin: 60px 24px;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(196,144,42,0.30), transparent 50%),
+      radial-gradient(circle at 90% 80%, rgba(184,90,60,0.34), transparent 60%),
+      linear-gradient(135deg, var(--moss-700), var(--moss-900));
+    color: var(--cream-50);
+    border-radius: 32px;
+    padding: 64px 56px;
+    display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px; align-items: center;
+    max-width: var(--max-w); margin-left: auto; margin-right: auto;
+    position: relative; overflow: hidden;
+  }
+  .cta-banner h2 { font-size: clamp(34px, 4vw, 52px); color: var(--cream-50); }
+  .cta-banner p { color: rgba(247,242,231,0.78); font-size: 17px; margin-top: 14px; max-width: 480px; }
+  .cta-banner .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+  .cta-banner .right { justify-self: end; }
+  .phone-mock {
+    width: 240px; height: 480px; border-radius: 38px; padding: 8px;
+    background: #0a0a0a; box-shadow: 0 24px 60px rgba(0,0,0,0.50);
+    position: relative;
+  }
+  .phone-mock .screen {
+    width: 100%; height: 100%; border-radius: 32px;
+    background: var(--cream-50);
+    overflow: hidden; position: relative;
+  }
+  .phone-mock .notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 84px; height: 22px; background: #000; border-radius: 100px; z-index: 5; }
+
+  /* ─── FOOTER ─────────────────────────────────────── */
+  footer.site {
+    background: var(--moss-900); color: var(--cream-50);
+    padding: 64px 0 32px;
+  }
+  footer .grid {
+    display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 48px;
+  }
+  footer h4 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mustard-500); margin-bottom: 16px; }
+  footer ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  footer ul a { font-size: 14px; color: rgba(247,242,231,0.74); }
+  footer ul a:hover { color: var(--cream-50); }
+  footer .about p { color: rgba(247,242,231,0.68); font-size: 14px; max-width: 320px; margin-top: 14px; }
+  footer .bottom {
+    margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(247,242,231,0.10);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    font-size: 12px; color: rgba(247,242,231,0.55);
+  }
+  footer .legal-note {
+    margin-top: 14px; padding: 14px 18px; border-radius: 14px;
+    background: rgba(247,242,231,0.05); border: 1px solid rgba(247,242,231,0.10);
+    font-size: 12px; color: rgba(247,242,231,0.66); line-height: 1.55;
+  }
+
+  /* ─── MODAL (search/submit/detail) ───────────────── */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(20,20,15,0.55); z-index: 200;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--bg); border-radius: 24px; max-width: 720px; width: 100%;
+    max-height: 86vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,0.40);
+    border: 1px solid var(--border);
+    animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1);
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.98);} to { opacity: 1; transform: none; } }
+  .modal-head {
+    padding: 22px 28px 14px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 1;
+  }
+  .modal-head h2 { font-size: 24px; }
+  .modal-body { padding: 22px 28px 28px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); }
+  .field input, .field textarea {
+    width: 100%; padding: 12px 16px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 15px; color: var(--fg); outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip-row .chip {
+    height: 36px; padding: 0 14px; border-radius: 100px;
+    background: var(--surface); color: var(--fg); border: 1px solid var(--border);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip-row .chip.active { background: var(--accent); color: #F7F2E7; border-color: var(--accent); }
+
+  /* ─── SEARCH MODAL ─────────────────────────────── */
+  .search-modal { padding: 18px 24px 28px; }
+  .search-input-row {
+    display: flex; gap: 10px; align-items: center;
+    padding: 8px 14px; border-radius: 100px; background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .search-input-row input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-size: 16px; color: var(--fg); height: 36px;
+  }
+  .search-results { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
+  .search-result {
+    display: flex; gap: 14px; padding: 12px; border-radius: 14px;
+    cursor: pointer; align-items: center;
+  }
+  .search-result:hover { background: var(--surface-2); }
+  .search-result .thumb {
+    width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #F7F2E7;
+  }
+
+  /* ─── DETAIL MODAL ──────────────────────────────── */
+  .detail-hero {
+    height: 280px; position: relative; flex-shrink: 0; overflow: hidden;
+    border-radius: 24px 24px 0 0;
+  }
+  .detail-hero .icon {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 130px; opacity: 0.45;
+  }
+  .detail-hero .controls {
+    position: absolute; top: 18px; left: 18px; right: 18px;
+    display: flex; justify-content: space-between;
+  }
+  .circle-btn {
+    width: 40px; height: 40px; border-radius: 100px;
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(12px);
+    border: none; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.12); padding: 0;
+    color: var(--ink);
+  }
+  .detail-body { padding: 22px 28px 32px; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 100px; letter-spacing: -0.005em; }
+  .info-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--muted); flex-wrap: wrap; }
+  .info-row .rating { color: var(--fg); font-weight: 700; }
+  .actions-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 22px; }
+  .action-btn {
+    height: 48px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--fg);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .action-btn.primary { background: var(--accent); color: #F7F2E7; border: none; }
+  .hours-card {
+    background: var(--surface); border-radius: 14px; padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .hours-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: var(--muted); }
+  .hours-row.today { color: var(--fg); font-weight: 700; }
+
+  /* ─── TOAST ──────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    background: var(--moss-800); color: var(--cream-50);
+    padding: 12px 20px; border-radius: 100px; font-size: 13px; font-weight: 600;
+    z-index: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.30);
+    animation: toastIn 0.3s ease-out;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px);} to { opacity: 1; transform: translate(-50%, 0);} }
+
+  /* ─── MENU TOGGLE (mobile) ──────────────────────── */
+  .menu-toggle { display: none; }
+
+  /* ─── RESPONSIVE ─────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .features { grid-template-columns: repeat(2, 1fr); }
+    .cat-grid { grid-template-columns: repeat(3, 1fr); }
+    .spot-grid { grid-template-columns: repeat(2, 1fr); }
+    .reviews-grid { grid-template-columns: 1fr 1fr; }
+    .hero .grid { grid-template-columns: 1fr; }
+    .hero-art { max-width: 480px; margin: 0 auto; }
+    .cta-banner { grid-template-columns: 1fr; padding: 48px 36px; }
+    .cta-banner .right { justify-self: center; }
+    nav.primary { display: none; }
+    .menu-toggle { display: inline-flex; }
+  }
+  @media (max-width: 720px) {
+    section { padding: 60px 0; }
+    .hero { padding: 48px 0 64px; }
+    .features, .cat-grid, .spot-grid, .reviews-grid, .steps {
+      grid-template-columns: 1fr;
+    }
+    .section-head { flex-direction: column; align-items: flex-start; }
+    .stat-item .num { font-size: 26px; }
+    .hero .stats { gap: 20px; flex-wrap: wrap; }
+    footer .grid { grid-template-columns: 1fr 1fr; }
+    .cta-banner { padding: 36px 24px; margin: 32px 16px; }
+  }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+// DATA
+const CATEGORIES = [
+  { id: "disp",  label: "Dispenzáře",   icon: "🌿", color: "moss"       },
+  { id: "cbd",   label: "CBD obchody",  icon: "🧴", color: "moss"       },
+  { id: "cafe",  label: "Kavárny",      icon: "☕", color: "terracotta" },
+  { id: "rest",  label: "Restaurace",   icon: "🍴", color: "terracotta" },
+  { id: "bar",   label: "Bary",         icon: "🍷", color: "mustard"    },
+  { id: "shop",  label: "Coffeeshopy",  icon: "🌬", color: "moss"       },
+  { id: "event", label: "Akce",         icon: "✦",  color: "mustard"    },
+];
+
+const SPOTS = [
+  { id: 1, name: "Café Listopad",       cat: "cafe",  dist: "0.4 km", open: true,  rating: 4.8, reviews: 142, tags: ["specialty kafe","CBD menu","pet-friendly"], hours: "do 22:00", area: "Praha 7", lat: 0.30, lng: 0.42, img: "moss",       address: "Veletržní 822/15, Praha 7", desc: "Útulná specialty kavárna v Holešovicích s laid-back přístupem. Mají drobné CBD menu, knihy zdarma a personál, který nechá hosty sedět tak dlouho, jak potřebujete." },
+  { id: 2, name: "Green Republic",      cat: "disp",  dist: "0.8 km", open: true,  rating: 4.9, reviews: 318, tags: ["medical","ověřeno","výběr 40+"],           hours: "do 20:00", area: "Praha 1", lat: 0.42, lng: 0.55, img: "terracotta", address: "Národní 25, Praha 1", desc: "Profesionální dispenzář v centru. Široký výběr přes 40 odrůd, certifikovaný personál a klidná atmosféra." },
+  { id: 3, name: "Konopná Lékárna",     cat: "cbd",   dist: "1.2 km", open: false, rating: 4.6, reviews: 89,  tags: ["CBD","extrakty","oleje"],                  hours: "otevře 9:00", area: "Praha 2", lat: 0.62, lng: 0.30, img: "mustard",  address: "Vinohradská 110, Praha 2", desc: "Specializovaný CBD obchod. Oleje, extrakty, kapsle. Personál umí poradit, ne přeprodat." },
+  { id: 4, name: "Bistro Sedmička",     cat: "rest",  dist: "0.6 km", open: true,  rating: 4.7, reviews: 211, tags: ["brunch","CBD koktejly","terasa"],          hours: "do 23:00", area: "Praha 7", lat: 0.50, lng: 0.48, img: "terracotta", address: "Dukelských hrdinů 19, Praha 7", desc: "Brunch bistro s CBD koktejlovým menu a velkou terasou. Skvělé na sobotní dopoledne." },
+  { id: 5, name: "Mlýnská Kavárna",     cat: "cafe",  dist: "0.9 km", open: true,  rating: 4.5, reviews: 76,  tags: ["víkend brunch","kniha"],                    hours: "do 19:00", area: "Praha 5", lat: 0.35, lng: 0.40, img: "moss",      address: "Mlýnská 4, Praha 5", desc: "Knižní kavárna u řeky. Tichá, plná lidí s laptopy a knihami. Dobrá káva i čaj." },
+  { id: 6, name: "Bar Pětka",           cat: "bar",   dist: "1.4 km", open: true,  rating: 4.4, reviews: 198, tags: ["natural","DJ","zahrádka"],                 hours: "do 02:00", area: "Praha 5", lat: 0.30, lng: 0.62, img: "mustard",   address: "Štefánikova 5, Praha 5", desc: "Natural wine bar s DJ víkendy a velkou zahrádkou. Friendly k pozdním hostům." },
+  { id: 7, name: "Highline Coffeeshop", cat: "shop",  dist: "2.1 km", open: true,  rating: 4.7, reviews: 504, tags: ["lounge","wifi","menu 20+"],                hours: "do 24:00", area: "Praha 4", lat: 0.70, lng: 0.65, img: "moss",      address: "Pankrácká 14, Praha 4", desc: "Coffeeshop v NL stylu. Lounge sezení, menu 20+ položek, wifi, pohodový personál." },
+];
+
+const REVIEWS = [
+  { user: "Tereza M.", avatar: "T", rating: 5, when: "2 dny",   text: "Konečně mapa, kde najdu všechny svoje oblíbený spoty na jednom místě. Sobotní brunch byl naprosto skvělý." },
+  { user: "Jakub R.",  avatar: "J", rating: 5, when: "1 týden", text: "Stěhoval jsem se do nového města a WeedSpot mi za týden ušetřil hodiny hledání. Doporučuji každému." },
+  { user: "Lenka V.",  avatar: "L", rating: 5, when: "3 týdny", text: "Můj nový oblíbený způsob, jak objevovat — přijdeš do nové čtvrti a hned víš, kam zajít na kafe." },
+];
+
+const TONE = {
+  moss:       { bg: "var(--moss-700)" },
+  terracotta: { bg: "var(--terracotta-600)" },
+  mustard:    { bg: "var(--mustard-600)" },
+};
+
+// LEAF + LOGO
+function CannabisLeaf({ fill = "#B85A3C", scale = 1, x = 0, y = 0 }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${scale})`}>
+      <path d="M 0 -22 C 1 -16, 2 -12, 4 -8 C 9 -10, 12 -14, 14 -16 C 13 -10, 10 -5, 8 -2 C 14 -3, 18 -4, 22 -4 C 17 0, 13 3, 11 5 C 16 8, 19 11, 20 14 C 13 12, 8 10, 5 9 C 4 14, 3 18, 2 22 C 0 18, -1 14, -2 9 C -7 12, -13 13, -17 14 C -15 11, -10 8, -8 5 C -13 3, -16 1, -19 -4 C -14 -3, -10 -3, -5 -2 C -8 -7, -10 -12, -11 -16 C -7 -13, -3 -10, -1 -8 C 0 -13, 0 -18, 0 -22 Z"
+            fill={fill} strokeLinejoin="round" />
+    </g>
+  );
+}
+
+function Logo({ size = 22 }) {
+  const icon = size * 1.3;
+  return (
+    <a href="#top" className="logo">
+      <svg width={icon} height={icon * 0.7} viewBox="0 0 110 80">
+        <path d="M 18 18 C 8 32, 8 48, 18 62" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M 32 26 C 26 34, 26 46, 32 54" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M 78 26 C 84 34, 84 46, 78 54" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M 92 18 C 102 32, 102 48, 92 62" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <CannabisLeaf fill="var(--accent)" scale={0.85} x={55} y={42} />
+      </svg>
+      <span className="word" style={{ fontSize: size }}>WeedSpot<span className="dot">.</span></span>
+    </a>
+  );
+}
+
+// ICONS
+const Ic = (size, kids, fill="none") => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>{kids}</svg>
+);
+const SearchIc  = (p={}) => Ic(p.size||20, <><circle cx="11" cy="11" r="7"/><path d="M20 20 16 16"/></>);
+const BookmarkIc= (p={}) => (
+  <svg width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill={p.filled?"currentColor":"none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}><path d="M6 3 18 3 18 21 12 17 6 21 Z"/></svg>
+);
+const MapIc     = (p={}) => Ic(p.size||20, <><path d="M9 4 3 6 3 20 9 18 15 20 21 18 21 4 15 6 9 4 Z"/><path d="M9 4 9 18"/><path d="M15 6 15 20"/></>);
+const CompassIc = (p={}) => Ic(p.size||20, <><circle cx="12" cy="12" r="9"/><path d="M16 8 14 14 8 16 10 10 Z"/></>);
+const ClockIc   = (p={}) => Ic(p.size||20, <><circle cx="12" cy="12" r="9"/><path d="M12 7 12 12 16 14"/></>);
+const PlusIc    = (p={}) => Ic(p.size||20, <><path d="M12 5 12 19"/><path d="M5 12 19 12"/></>);
+const ShareIc   = (p={}) => Ic(p.size||20, <><path d="M12 4 12 16"/><path d="M7 9 12 4 17 9"/><path d="M5 14 5 20 19 20 19 14"/></>);
+const PhoneIc   = (p={}) => Ic(p.size||20, <path d="M5 3 8 3 10 8 7 10 C 8 13, 11 16, 14 17 L 16 14 21 16 21 19 C 21 20, 20 21, 19 21 C 10 21, 3 14, 3 5 C 3 4, 4 3, 5 3 Z"/>);
+const DirIc     = (p={}) => Ic(p.size||20, <><path d="M12 2 L 22 12 L 12 22 L 2 12 Z"/><path d="M8 12 16 12"/><path d="M13 9 16 12 13 15"/></>);
+const CloseIc   = (p={}) => Ic(p.size||20, <><path d="M5 5 19 19"/><path d="M19 5 5 19"/></>);
+const HeartIc   = (p={}) => Ic(p.size||20, <path d="M12 21 C 12 21, 3 15, 3 9 C 3 5, 6 3, 9 3 C 11 3, 12 5, 12 5 C 12 5, 13 3, 15 3 C 18 3, 21 5, 21 9 C 21 15, 12 21, 12 21 Z"/>);
+const SunIc     = (p={}) => Ic(p.size||20, <><circle cx="12" cy="12" r="4"/><path d="M12 2 12 4"/><path d="M12 20 12 22"/><path d="M2 12 4 12"/><path d="M20 12 22 12"/><path d="M5 5 6.5 6.5"/><path d="M17.5 17.5 19 19"/><path d="M19 5 17.5 6.5"/><path d="M6.5 17.5 5 19"/></>);
+const MoonIc    = (p={}) => Ic(p.size||20, <path d="M21 12.8 A 9 9 0 1 1 11.2 3 A 7 7 0 0 0 21 12.8 Z"/>);
+const ChevronR  = (p={}) => Ic(p.size||20, <path d="M9 5 16 12 9 19"/>);
+const VerifIc   = (p={}) => Ic(p.size||20, <><circle cx="12" cy="12" r="9"/><path d="M8 12 11 15 16 9"/></>);
+const PpIc      = (p={}) => Ic(p.size||20, <><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></>);
+const InstaIc   = (p={}) => Ic(p.size||20, <><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></>);
+const TwIc      = (p={}) => Ic(p.size||20, <path d="M22 5.8 C 21.3 6.1, 20.5 6.3, 19.7 6.4 C 20.5 5.9, 21.2 5.1, 21.5 4.2 C 20.7 4.7, 19.9 5, 19 5.2 C 18.3 4.5, 17.3 4, 16.2 4 C 14.1 4, 12.4 5.7, 12.4 7.8 C 12.4 8.1, 12.4 8.4, 12.5 8.7 C 9.3 8.5, 6.5 7, 4.6 4.7 C 4.3 5.3, 4.1 6, 4.1 6.7 C 4.1 8, 4.8 9.2, 5.8 9.9 C 5.2 9.9, 4.6 9.7, 4.1 9.5 C 4.1 11.4, 5.5 13, 7.3 13.4 C 7 13.5, 6.6 13.5, 6.3 13.5 C 6 13.5, 5.8 13.5, 5.5 13.4 C 6 15, 7.5 16.2, 9.3 16.2 C 7.9 17.3, 6.1 18, 4.1 18 C 3.7 18, 3.4 18, 3 17.9 C 4.9 19.1, 7 19.8, 9.4 19.8 C 16.2 19.8, 19.9 14.2, 19.9 9.4 C 19.9 9.2, 19.9 9.1, 19.9 8.9 C 20.7 8.4, 21.4 7.7, 22 6.9 Z"/>);
+const TtIc      = (p={}) => Ic(p.size||20, <><path d="M12 2 L 12 16 C 12 18, 10.5 19.5, 8.5 19.5 C 7.4 19.5, 6.5 19, 6 18.2"/><path d="M12 6 C 14 8, 16.5 9, 19 9 L 19 5 C 17 5, 14.8 4, 12 2"/></>);
+
+// HEADER
+function Header({ onSearch, onAdd, onSetTheme, dark, onMenu }) {
+  return (
+    <header className="site" id="top">
+      <div className="container row">
+        <Logo size={22}/>
+        <nav className="primary">
+          <a href="#discover">Objevit</a>
+          <a href="#categories">Kategorie</a>
+          <a href="#map">Mapa</a>
+          <a href="#how">Jak to funguje</a>
+          <a href="#community">Komunita</a>
+        </nav>
+        <div className="actions">
+          <button className="icon-btn menu-toggle" onClick={onMenu} title="Menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6 21 6"/><path d="M3 12 21 12"/><path d="M3 18 21 18"/></svg>
+          </button>
+          <button className="icon-btn" onClick={onSearch} title="Hledat"><SearchIc size={18}/></button>
+          <button className="icon-btn" onClick={() => onSetTheme(dark ? "light" : "dark")} title={dark ? "Cream" : "Moss"}>
+            {dark ? <SunIc size={18}/> : <MoonIc size={18}/>}
+          </button>
+          <button className="btn primary" onClick={onAdd}><PlusIc size={16}/>Přidat spot</button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// HERO
+function Hero({ onSearch, onAdd, dark }) {
+  const featured = SPOTS.find(s => s.id === 1);
+  return (
+    <section className="hero">
+      <svg className="deco-pin" width="500" height="500" viewBox="0 0 36 44">
+        <path d="M 18 2 C 9 2, 2 9, 2 18 C 2 28, 18 42, 18 42 C 18 42, 34 28, 34 18 C 34 9, 27 2, 18 2 Z" fill="var(--accent)"/>
+      </svg>
+      <div className="container">
+        <div className="grid">
+          <div>
+            <span className="eyebrow">● Nyní v 6 evropských městech</span>
+            <h1>Najdi své <em>místo.</em></h1>
+            <p className="lead">
+              Komunitní mapa dispenzářů, CBD obchodů, kaváren a restaurací,
+              které mají rády trávu. V Česku a po Evropě —
+              ověřená místa, kam můžeš zajít bez vysvětlování.
+            </p>
+            <div className="cta-row">
+              <button className="btn primary lg" onClick={onSearch}><SearchIc size={18}/>Hledat spot</button>
+              <a href="#map" className="btn ghost lg"><MapIc size={18}/>Otevřít mapu</a>
+            </div>
+            <div className="stats">
+              <div className="stat-item"><div className="num">2 400+</div><div className="lab">Ověřených spotů</div></div>
+              <div className="stat-item"><div className="num">18 200</div><div className="lab">Recenzí v komunitě</div></div>
+              <div className="stat-item"><div className="num">6</div><div className="lab">Měst v Evropě</div></div>
+            </div>
+          </div>
+          <div className="hero-art">
+            <MapBg dark={true} small/>
+            <div className="ping"/>
+            <div className="you-here"/>
+            {SPOTS.slice(0, 5).map((s, i) => (
+              <button key={s.id} className="pin-mark" style={{ left: `${s.lng * 100}%`, top: `${s.lat * 100}%`, transform: "translate(-50%,-100%)" }}>
+                <svg width="32" height="40" viewBox="0 0 36 44">
+                  <path d="M 18 2 C 9 2, 2 9, 2 18 C 2 28, 18 42, 18 42 C 18 42, 34 28, 34 18 C 34 9, 27 2, 18 2 Z" fill={s.img === "terracotta" ? "#B85A3C" : s.img === "mustard" ? "#C8902A" : "#3D5132"} stroke="white" strokeWidth="2.5"/>
+                  <text x="18" y="24" textAnchor="middle" fontSize="14" fill="white">{CATEGORIES.find(c => c.id === s.cat).icon}</text>
+                </svg>
+              </button>
+            ))}
+            <div className="float-card">
+              <div className="ic-thumb">{CATEGORIES.find(c => c.id === featured.cat).icon}</div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="name">{featured.name}</div>
+                <div className="meta">● Otevřeno · ★ {featured.rating} · {featured.dist}</div>
+              </div>
+              <button className="icon-btn" style={{ width: 36, height: 36, color: "var(--accent)" }}><BookmarkIc size={16} filled/></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// MAP BG (used in hero + map preview)
+function MapBg({ dark, small }) {
+  const land = dark ? "#1F2A1C" : "#EFE8D6";
+  const water = dark ? "#1A2820" : "#D9E5DA";
+  const road = dark ? "rgba(247,242,231,0.10)" : "#E4D9BD";
+  const roadStrong = dark ? "rgba(247,242,231,0.18)" : "#E9DFC9";
+  const block = dark ? "#2C3A26" : "#EFE4CC";
+  const park = "rgba(123,141,101,0.30)";
+  return (
+    <svg className="map-bg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: land }}>
+      <path d="M -20 240 Q 200 200, 400 270 T 820 290 L 820 360 Q 600 340, 400 360 T -20 320 Z" fill={water}/>
+      <ellipse cx="160" cy="120" rx="100" ry="70" fill={park}/>
+      <ellipse cx="640" cy="440" rx="120" ry="80" fill={park}/>
+      <ellipse cx="500" cy="160" rx="70" ry="50" fill={park}/>
+      <path d="M -20 100 L 820 130" stroke={roadStrong} strokeWidth="6" fill="none"/>
+      <path d="M -20 460 L 820 480" stroke={roadStrong} strokeWidth="5" fill="none"/>
+      <path d="M 220 -20 L 250 620" stroke={roadStrong} strokeWidth="5" fill="none"/>
+      <path d="M 560 -20 L 540 620" stroke={roadStrong} strokeWidth="5" fill="none"/>
+      {[40, 200, 320, 400, 540, 580].map((y, i) => (
+        <line key={`h${i}`} x1="-20" y1={y} x2="820" y2={y} stroke={road} strokeWidth="2"/>
+      ))}
+      {[40, 120, 380, 460, 700, 760].map((x, i) => (
+        <line key={`v${i}`} x1={x} y1="-20" x2={x + 10} y2="620" stroke={road} strokeWidth="2"/>
+      ))}
+      {[
+        [60,40,80,30],[200,50,60,40],[330,40,80,40],[460,50,60,30],[700,60,80,30],
+        [60,180,80,50],[230,200,60,50],[400,180,90,40],[600,200,60,50],[700,210,80,30],
+        [60,400,80,40],[200,420,60,50],[460,400,90,40],[700,420,80,40],
+        [60,520,80,40],[260,540,60,40],[400,520,80,40],[600,530,80,40],
+      ].map(([x,y,w,h], i) => (
+        <rect key={i} x={x} y={y} width={w} height={h} rx="2" fill={block} opacity="0.7"/>
+      ))}
+    </svg>
+  );
+}
+
+// FEATURES
+function Features() {
+  const items = [
+    { icon: CompassIc, color: "var(--terracotta-600)", bg: "var(--terracotta-100)", t: "Mapa & filtry, co nezklamou", d: "Filtruj podle kategorie, otevírací doby a vzdálenosti. Najdi přesně to, co teď potřebuješ — od dispenzáře po brunch spot." },
+    { icon: VerifIc,   color: "var(--moss-600)",       bg: "var(--moss-100)",       t: "Ověřeno komunitou", d: "Každý spot prošel kurátorem i komunitou. Přidat může kdokoli, ověřuje se do 24 hodin. Konec falešných výsledků." },
+    { icon: HeartIc,   color: "var(--mustard-600)",    bg: "var(--mustard-100)",    t: "Tvoje knihovna spotů", d: "Ulož si oblíbené, vytvoř si sbírky podle nálady, sdílej je s přáteli. Tvá osobní mapa friendly podniků v Evropě." },
+  ];
+  return (
+    <section id="discover">
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">Proč WeedSpot</span>
+            <h2 style={{ marginTop: 16 }}>Friendly podniky.<br/>Bez hádání, bez vysvětlování.</h2>
+          </div>
+          <div className="right">
+            <a href="#map" className="btn ghost">Otevřít mapu →</a>
+          </div>
+        </div>
+        <div className="features">
+          {items.map((it, i) => {
+            const Ic = it.icon;
+            return (
+              <div key={i} className="feature">
+                <div className="ic-wrap" style={{ background: it.bg, color: it.color }}><Ic size={24}/></div>
+                <h3>{it.t}</h3>
+                <p>{it.d}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// CATEGORIES
+function CategoriesSection({ onSearch }) {
+  const palette = {
+    moss:       { bg: "var(--moss-100)",       fg: "var(--moss-900)" },
+    terracotta: { bg: "var(--terracotta-100)", fg: "var(--terracotta-700)" },
+    mustard:    { bg: "var(--mustard-100)",    fg: "var(--bark-900)" },
+  };
+  return (
+    <section id="categories" style={{ background: "var(--surface-2)" }}>
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">Procházet</span>
+            <h2 style={{ marginTop: 16 }}>Co tě dnes láká?</h2>
+            <p className="lead">7 kategorií, od dispenzářů po pozdní bary. Každá s vlastní vibe a komunitou.</p>
+          </div>
+        </div>
+        <div className="cat-grid">
+          {CATEGORIES.map(c => {
+            const p = palette[c.color];
+            const count = SPOTS.filter(s => s.cat === c.id).length;
+            return (
+              <div key={c.id} className="cat-card" style={{ background: p.bg, color: p.fg }} onClick={onSearch}>
+                <div className="big-icon">{c.icon}</div>
+                <div>
+                  <div className="label">{c.label}</div>
+                  <div className="count">{count > 0 ? `${count} spotů v Praze` : "Brzy"}</div>
+                </div>
+                <div className="cta" style={{ color: p.fg }}>Prozkoumat →</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// MAP PREVIEW
+function MapSection({ dark, onOpenSpot }) {
+  return (
+    <section id="map">
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">Mapa</span>
+            <h2 style={{ marginTop: 16 }}>Praha · 7 spotů kolem tebe</h2>
+            <p className="lead">Klikni na pin a otevři detail spotu. Plnohodnotná mapa je dostupná v naší aplikaci.</p>
+          </div>
+          <div className="right">
+            <a href="index.html" className="btn primary"><MapIc size={16}/>Otevřít plnou mapu</a>
+          </div>
+        </div>
+        <div className="map-preview">
+          <MapBg dark={dark}/>
+          {SPOTS.map(s => {
+            const cd = CATEGORIES.find(c => c.id === s.cat);
+            const tones = { moss: "#3D5132", terracotta: "#B85A3C", mustard: "#C8902A" };
+            const color = tones[cd?.color] || "#3D5132";
+            return (
+              <button key={s.id} className="pin" style={{ left: `${s.lng * 100}%`, top: `${s.lat * 100}%` }} onClick={() => onOpenSpot(s.id)} title={s.name}>
+                <svg width="44" height="54" viewBox="0 0 36 44">
+                  <path d="M 18 2 C 9 2, 2 9, 2 18 C 2 28, 18 42, 18 42 C 18 42, 34 28, 34 18 C 34 9, 27 2, 18 2 Z" fill={color} stroke="white" strokeWidth="2.5"/>
+                  <text x="18" y="24" textAnchor="middle" fontSize="14" fill="white">{cd?.icon}</text>
+                </svg>
+              </button>
+            );
+          })}
+          <div className="legend">
+            <div className="row"><div className="dot" style={{ background: "#3D5132" }}/>Dispenzáře, CBD, coffeeshop</div>
+            <div className="row"><div className="dot" style={{ background: "#B85A3C" }}/>Kavárny & restaurace</div>
+            <div className="row"><div className="dot" style={{ background: "#C8902A" }}/>Bary & akce</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// FEATURED SPOTS
+function FeaturedSection({ onOpenSpot, savedIds, onToggleSave }) {
+  const list = SPOTS.filter(s => s.rating >= 4.5).slice(0, 6);
+  return (
+    <section>
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">Tipy redakce</span>
+            <h2 style={{ marginTop: 16 }}>Nejlépe hodnocené spoty</h2>
+            <p className="lead">Co teď doporučujeme vyzkoušet — od ranního brunche po pozdní bar.</p>
+          </div>
+        </div>
+        <div className="spot-grid">
+          {list.map(s => (
+            <SpotCard key={s.id} spot={s} saved={savedIds.has(s.id)} onClick={() => onOpenSpot(s.id)} onToggleSave={onToggleSave}/>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SpotCard({ spot, saved, onClick, onToggleSave }) {
+  const cd = CATEGORIES.find(c => c.id === spot.cat);
+  const tone = TONE[spot.img] || TONE.moss;
+  return (
+    <article className="spot-card" onClick={onClick}>
+      <div className="spot-photo" style={{ background: tone.bg }}>
+        <div className="gradient"/>
+        <div className="ic">{cd.icon}</div>
+        <span className="badge">{cd.label}</span>
+        <button className={"save" + (saved ? " saved" : "")} onClick={e => { e.stopPropagation(); onToggleSave(spot.id); }} title={saved ? "Odebrat" : "Uložit"}>
+          <BookmarkIc size={16} filled={saved}/>
+        </button>
+      </div>
+      <div className="spot-body">
+        <div className="name">{spot.name}</div>
+        <div className="meta">
+          <span className={spot.open ? "open" : "closed"}>{spot.open ? "● Otevřeno" : "○ Zavřeno"}</span>
+          <span>·</span>
+          <span style={{ color: "var(--fg)", fontWeight: 700 }}>★ {spot.rating}</span>
+          <span>({spot.reviews})</span>
+          <span>·</span>
+          <span>{spot.area} · {spot.dist}</span>
+        </div>
+        <p className="desc">{spot.desc}</p>
+        <div className="tags">
+          {spot.tags.slice(0, 3).map(t => <span key={t} className="tag">{t}</span>)}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// HOW IT WORKS
+function HowItWorks() {
+  const steps = [
+    { t: "Otevři mapu", d: "Vidíš všechny ověřené spoty kolem sebe — dispenzáře, kavárny, restaurace, coffeeshopy. Filtruj, co potřebuješ." },
+    { t: "Vyber spot", d: "Detailní stránka má hodiny, recenze, kategorie, fotky a ‚co tam je friendly‘. Žádné překvapení na místě." },
+    { t: "Sdílej & objevuj", d: "Ulož si oblíbené, ohodnoť, přidej nový spot. Komunita ověří a tvůj tip pomůže ostatním." },
+  ];
+  return (
+    <section id="how" style={{ background: "var(--surface-2)" }}>
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">Jak to funguje</span>
+            <h2 style={{ marginTop: 16 }}>Tři kroky a jsi tam.</h2>
+          </div>
+        </div>
+        <div className="steps">
+          {steps.map((s, i) => (
+            <div key={i} className="step">
+              <div className="num">{String(i + 1).padStart(2, "0")}</div>
+              <h3>{s.t}</h3>
+              <p>{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// REVIEWS
+function ReviewsSection() {
+  const palette = ["var(--moss-700)", "var(--terracotta-600)", "var(--mustard-600)"];
+  return (
+    <section id="community">
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">Komunita</span>
+            <h2 style={{ marginTop: 16 }}>Co o nás říkají uživatelé</h2>
+            <p className="lead">2 400 spotů, 18 000 recenzí, jedna komunita.</p>
+          </div>
+        </div>
+        <div className="reviews-grid">
+          {REVIEWS.map((r, i) => (
+            <div key={i} className="review">
+              <div className="stars">{"★".repeat(r.rating)}</div>
+              <p className="text">„{r.text}"</p>
+              <div className="author">
+                <div className="av" style={{ background: palette[i % 3] }}>{r.avatar}</div>
+                <div>
+                  <div className="who">{r.user}</div>
+                  <div className="when">před {r.when}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// CTA BANNER
+function CtaBanner({ onSearch }) {
+  return (
+    <div className="cta-banner">
+      <div>
+        <span className="eyebrow" style={{ background: "rgba(247,242,231,0.10)", color: "var(--mustard-500)" }}>● Mobilní aplikace</span>
+        <h2 style={{ marginTop: 18 }}>Nos WeedSpot v kapse.</h2>
+        <p>Stáhni si aplikaci a měj svoji mapu friendly podniků vždy po ruce. Otevřeno teď, do 15 minut, kategorie, recenze — vše co potřebuješ.</p>
+        <div className="actions">
+          <a href="index.html" className="btn primary lg"><PhoneIc size={18}/>Otevřít aplikaci</a>
+          <button className="btn lg" onClick={onSearch} style={{ background: "rgba(247,242,231,0.14)", color: "var(--cream-50)", border: "1px solid rgba(247,242,231,0.18)" }}>
+            <SearchIc size={18}/>Najít spot
+          </button>
+        </div>
+      </div>
+      <div className="right">
+        <div className="phone-mock">
+          <div className="notch"/>
+          <div className="screen">
+            <MapBg dark={false} small/>
+            <div style={{ position: "absolute", left: 12, right: 12, bottom: 16, background: "white", borderRadius: 14, padding: 10, display: "flex", gap: 10, alignItems: "center", boxShadow: "0 8px 24px rgba(0,0,0,0.20)" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--moss-700)", color: "#F7F2E7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>☕</div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 13, letterSpacing: "-0.02em", color: "var(--ink)" }}>Café Listopad</div>
+                <div style={{ fontSize: 10, color: "var(--bark-600)", marginTop: 2 }}>● Otevřeno · ★ 4.8</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// FOOTER
+function Footer() {
+  return (
+    <footer className="site">
+      <div className="container">
+        <div className="grid">
+          <div className="about">
+            <Logo size={20}/>
+            <p>Komunitní mapa friendly podniků v Česku a Evropě. Najdi své místo, kde ti rozumí.</p>
+            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+              <a href="#" className="icon-btn" style={{ borderColor: "rgba(247,242,231,0.16)", color: "var(--cream-50)" }}><InstaIc size={18}/></a>
+              <a href="#" className="icon-btn" style={{ borderColor: "rgba(247,242,231,0.16)", color: "var(--cream-50)" }}><TwIc size={18}/></a>
+              <a href="#" className="icon-btn" style={{ borderColor: "rgba(247,242,231,0.16)", color: "var(--cream-50)" }}><TtIc size={18}/></a>
+            </div>
+          </div>
+          <div>
+            <h4>Produkt</h4>
+            <ul>
+              <li><a href="#discover">Mapa</a></li>
+              <li><a href="#categories">Kategorie</a></li>
+              <li><a href="index.html">Mobilní aplikace</a></li>
+              <li><a href="#how">Jak to funguje</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Komunita</h4>
+            <ul>
+              <li><a href="#">Přidat spot</a></li>
+              <li><a href="#">Ambasadoři</a></li>
+              <li><a href="#">Pravidla recenzí</a></li>
+              <li><a href="#">Pro podniky</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Společnost</h4>
+            <ul>
+              <li><a href="#">O nás</a></li>
+              <li><a href="#">Blog</a></li>
+              <li><a href="#">Kariéra</a></li>
+              <li><a href="#">Kontakt</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="legal-note">
+          <strong style={{ color: "var(--mustard-500)" }}>Legální upozornění.</strong> WeedSpot je informační platforma o podnicích, které jsou friendly k uživatelům konopí.
+          Nepropagujeme prodej omamných látek ani neporušujeme zákony zemí, ve kterých působíme. CBD obchody a podniky uvedené v mapě
+          fungují v souladu s místní legislativou. Některé kategorie (např. coffeeshopy NL) jsou viditelné pouze v zemích, kde je to legální.
+        </div>
+
+        <div className="bottom">
+          <span>© 2026 WeedSpot s.r.o. · IČO 12345678 · Praha</span>
+          <div style={{ display: "flex", gap: 18 }}>
+            <a href="#">Podmínky</a>
+            <a href="#">Ochrana osobních údajů</a>
+            <a href="#">Cookies</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// SEARCH MODAL
+function SearchModal({ onClose, onOpenSpot }) {
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState("all");
+  const inputRef = useRef(null);
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  let list = filter === "all" ? SPOTS : SPOTS.filter(s => s.cat === filter);
+  if (q) {
+    const qq = q.toLowerCase();
+    list = list.filter(s => s.name.toLowerCase().includes(qq) || s.tags.some(t => t.toLowerCase().includes(qq)) || s.area.toLowerCase().includes(qq));
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <h2>Hledat spot</h2>
+          <button className="icon-btn" onClick={onClose}><CloseIc size={20}/></button>
+        </div>
+        <div className="search-modal">
+          <div className="search-input-row">
+            <SearchIc size={18}/>
+            <input ref={inputRef} value={q} onChange={e => setQ(e.target.value)} placeholder="Najít spot, kategorii, město…"/>
+            {q && <button className="icon-btn" onClick={() => setQ("")} style={{ width: 32, height: 32, border: "none" }}><CloseIc size={14}/></button>}
+          </div>
+
+          <div style={{ marginTop: 14 }} className="chip-row">
+            <button className={"chip" + (filter === "all" ? " active" : "")} onClick={() => setFilter("all")}>Vše</button>
+            {CATEGORIES.map(c => (
+              <button key={c.id} className={"chip" + (filter === c.id ? " active" : "")} onClick={() => setFilter(c.id)}>
+                <span>{c.icon}</span>{c.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="search-results">
+            {list.map(s => {
+              const cd = CATEGORIES.find(c => c.id === s.cat);
+              const tone = TONE[s.img];
+              return (
+                <div key={s.id} className="search-result" onClick={() => { onOpenSpot(s.id); onClose(); }}>
+                  <div className="thumb" style={{ background: tone.bg }}>{cd.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em" }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                      {cd.label} · {s.area} · ★ {s.rating}
+                    </div>
+                  </div>
+                  <ChevronR size={18}/>
+                </div>
+              );
+            })}
+            {list.length === 0 && (
+              <div style={{ padding: 36, textAlign: "center", color: "var(--muted)" }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 20, color: "var(--fg)" }}>Nic jsme nenašli.</div>
+                <div style={{ marginTop: 4, fontSize: 14 }}>Zkus jiný výraz nebo rozšiř kategorii.</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// DETAIL MODAL
+function DetailModal({ spotId, onClose, savedIds, onToggleSave, dark, showToast }) {
+  const spot = SPOTS.find(s => s.id === spotId);
+  if (!spot) return null;
+  const cd = CATEGORIES.find(c => c.id === spot.cat);
+  const heroBg = TONE[spot.img]?.bg || "var(--moss-700)";
+  const isSaved = savedIds.has(spot.id);
+  const catColors = {
+    moss:       { bg: "var(--moss-100)",       fg: "var(--moss-900)" },
+    terracotta: { bg: "var(--terracotta-100)", fg: "var(--terracotta-700)" },
+    mustard:    { bg: "var(--mustard-100)",    fg: "var(--bark-900)" },
+  };
+  const cc = catColors[cd.color];
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 720, padding: 0 }}>
+        <div className="detail-hero" style={{ background: heroBg }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.20), transparent 50%), radial-gradient(circle at 80% 90%, rgba(0,0,0,0.20), transparent 60%)" }}/>
+          <div className="icon">{cd.icon}</div>
+          <div className="controls">
+            <button className="circle-btn" onClick={onClose}><CloseIc size={18}/></button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="circle-btn" onClick={() => showToast("Sdílení zkopírováno")}><ShareIc size={18}/></button>
+              <button className="circle-btn" onClick={() => onToggleSave(spot.id)} style={{ color: isSaved ? "var(--accent)" : "var(--ink)" }}>
+                <BookmarkIc size={18} filled={isSaved}/>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="detail-body">
+          <div className="pills">
+            <span className="pill" style={{ background: cc.bg, color: cc.fg }}>{cd.label}</span>
+            <span className="pill" style={{ background: spot.open ? "var(--moss-100)" : "transparent", color: spot.open ? "var(--moss-900)" : "var(--terracotta-700)" }}>
+              {spot.open ? "● Otevřeno · " + spot.hours : "○ Zavřeno · " + spot.hours}
+            </span>
+          </div>
+          <h2 style={{ marginTop: 12, fontSize: 32 }}>{spot.name}</h2>
+          <div className="info-row">
+            <span className="rating">★ {spot.rating}</span>
+            <span>({spot.reviews} recenzí)</span>
+            <span>·</span>
+            <span>{spot.area}</span>
+            <span>·</span>
+            <span>{spot.dist}</span>
+          </div>
+
+          <div className="actions-grid">
+            <button className="action-btn primary" onClick={() => showToast("Trasa nastavena")}><DirIc size={16}/>Trasa</button>
+            <button className="action-btn" onClick={() => showToast("Volám…")}><PhoneIc size={16}/>Volat</button>
+            <button className="action-btn" onClick={() => showToast("Sdílení zkopírováno")}><ShareIc size={16}/>Sdílet</button>
+          </div>
+
+          <h3 style={{ fontSize: 18, marginTop: 26, marginBottom: 10 }}>O místě</h3>
+          <p style={{ color: "var(--muted)", margin: 0, lineHeight: 1.55 }}>{spot.desc}</p>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
+            {spot.tags.map(t => (
+              <span key={t} style={{ fontSize: 12, fontWeight: 500, color: "var(--muted)", padding: "5px 11px", borderRadius: 100, background: "var(--surface)", border: "1px solid var(--border)" }}>{t}</span>
+            ))}
+          </div>
+
+          <h3 style={{ fontSize: 18, marginTop: 26, marginBottom: 10 }}>Otevírací doba</h3>
+          <div className="hours-card">
+            {[
+              ["Pondělí","8:00 – 22:00"],["Úterý","8:00 – 22:00"],
+              ["Středa","8:00 – 22:00", true],
+              ["Čtvrtek","8:00 – 22:00"],["Pátek","8:00 – 24:00"],
+              ["Sobota","9:00 – 24:00"],["Neděle","9:00 – 20:00"],
+            ].map(([d,h,today]) => (
+              <div key={d} className={"hours-row" + (today ? " today" : "")}>
+                <span>{d}{today && " · dnes"}</span><span>{h}</span>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ fontSize: 18, marginTop: 26, marginBottom: 10 }}>Adresa</h3>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{spot.address}</div>
+              <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>{spot.dist} od vás</div>
+            </div>
+            <button className="btn primary" onClick={() => showToast("Otevírám mapu…")}>Otevřít</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// SUBMIT MODAL
+function SubmitModal({ onClose, showToast }) {
+  const [name, setName] = useState("");
+  const [cat, setCat] = useState("cafe");
+  const [addr, setAddr] = useState("");
+  const [desc, setDesc] = useState("");
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <h2>Přidat spot</h2>
+          <button className="icon-btn" onClick={onClose}><CloseIc size={20}/></button>
+        </div>
+        <div className="modal-body">
+          <p style={{ color: "var(--muted)", margin: "0 0 22px", fontSize: 15 }}>
+            Pomoz komunitě. Doplň, co je friendly. Recenzujeme do 24 hodin a publikujeme po ověření.
+          </p>
+          <div className="field">
+            <label>Název místa</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="např. Café Listopad"/>
+          </div>
+          <div className="field">
+            <label>Kategorie</label>
+            <div className="chip-row">
+              {CATEGORIES.map(c => (
+                <button key={c.id} className={"chip" + (cat === c.id ? " active" : "")} onClick={() => setCat(c.id)}>
+                  <span>{c.icon}</span>{c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <label>Adresa</label>
+            <input value={addr} onChange={e => setAddr(e.target.value)} placeholder="Ulice, město"/>
+          </div>
+          <div className="field">
+            <label>Krátký popis</label>
+            <textarea rows="4" value={desc} onChange={e => setDesc(e.target.value)} placeholder="2–3 věty. Co bys řekl kámošovi."/>
+          </div>
+          <button className="btn primary lg" style={{ width: "100%" }} onClick={() => { showToast("Spot odeslán ke schválení"); onClose(); }}>Odeslat ke schválení</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// MOBILE MENU
+function MobileMenu({ onClose, onSearch, onAdd }) {
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
+        <div className="modal-head">
+          <Logo size={20}/>
+          <button className="icon-btn" onClick={onClose}><CloseIc size={20}/></button>
+        </div>
+        <div className="modal-body">
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {[
+              ["#discover", "Objevit"],
+              ["#categories", "Kategorie"],
+              ["#map", "Mapa"],
+              ["#how", "Jak to funguje"],
+              ["#community", "Komunita"],
+            ].map(([href, label]) => (
+              <a key={href} href={href} onClick={onClose} style={{ padding: "14px 4px", fontSize: 18, fontFamily: "'Fraunces', serif", fontWeight: 600, borderBottom: "1px solid var(--border)" }}>{label}</a>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+            <button className="btn ghost" style={{ flex: 1 }} onClick={() => { onSearch(); onClose(); }}><SearchIc size={16}/>Hledat</button>
+            <button className="btn primary" style={{ flex: 1 }} onClick={() => { onAdd(); onClose(); }}><PlusIc size={16}/>Přidat spot</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// APP
+function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("ws-desk-theme") || "light");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openSpotId, setOpenSpotId] = useState(null);
+  const [savedIds, setSavedIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("ws-saved") || "[1,4]")); }
+    catch { return new Set([1, 4]); }
+  });
+  const [toast, setToast] = useState(null);
+  const dark = theme === "dark";
+
+  useEffect(() => { document.documentElement.classList.toggle("dark", dark); }, [dark]);
+  useEffect(() => { localStorage.setItem("ws-desk-theme", theme); }, [theme]);
+  useEffect(() => { localStorage.setItem("ws-saved", JSON.stringify([...savedIds])); }, [savedIds]);
+
+  const showToast = useCallback((m) => { setToast(m); setTimeout(() => setToast(null), 1800); }, []);
+  const toggleSave = useCallback((id) => {
+    setSavedIds(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) { n.delete(id); showToast("Odebráno z uložených"); }
+      else { n.add(id); showToast("Uloženo"); }
+      return n;
+    });
+  }, [showToast]);
+
+  return (
+    <>
+      <Header
+        onSearch={() => setSearchOpen(true)}
+        onAdd={() => setSubmitOpen(true)}
+        onSetTheme={setTheme}
+        dark={dark}
+        onMenu={() => setMenuOpen(true)}
+      />
+      <Hero onSearch={() => setSearchOpen(true)} dark={dark}/>
+      <Features/>
+      <CategoriesSection onSearch={() => setSearchOpen(true)}/>
+      <MapSection dark={dark} onOpenSpot={setOpenSpotId}/>
+      <FeaturedSection onOpenSpot={setOpenSpotId} savedIds={savedIds} onToggleSave={toggleSave}/>
+      <HowItWorks/>
+      <ReviewsSection/>
+      <CtaBanner onSearch={() => setSearchOpen(true)}/>
+      <Footer/>
+
+      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpenSpot={setOpenSpotId}/>}
+      {submitOpen && <SubmitModal onClose={() => setSubmitOpen(false)} showToast={showToast}/>}
+      {openSpotId && <DetailModal spotId={openSpotId} onClose={() => setOpenSpotId(null)} savedIds={savedIds} onToggleSave={toggleSave} dark={dark} showToast={showToast}/>}
+      {menuOpen && <MobileMenu onClose={() => setMenuOpen(false)} onSearch={() => setSearchOpen(true)} onAdd={() => setSubmitOpen(true)}/>}
+      {toast && <div className="toast">{toast}</div>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,1535 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<title>Mapa friendly podniků v Česku — WeedSpot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#F7F2E7" />
+<meta name="description" content="Interaktivní mapa dispenzářů, CBD obchodů, kaváren, restaurací, barů, coffeeshopů a akcí v České republice. Filtruj podle kategorie, otevírací doby a hodnocení."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<!-- Leaflet (open-source, no API key) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<style>
+  :root {
+    --cream-50:  #F7F2E7;
+    --cream-100: #EFE8D6;
+    --cream-200: #E4D9BD;
+    --sand-200:  #D6CDB8;
+    --sand-300:  #CDBE99;
+    --moss-100:  #DCE3CD;
+    --moss-600:  #52693E;
+    --moss-700:  #3D5132;
+    --moss-800:  #2C3A26;
+    --moss-900:  #1F2A1C;
+    --terracotta-100: #F2D8C7;
+    --terracotta-500: #D17251;
+    --terracotta-600: #B85A3C;
+    --terracotta-700: #94422A;
+    --mustard-100: #F2E5BD;
+    --mustard-500: #E0A93A;
+    --mustard-600: #C8902A;
+    --bark-600: #5C4F3A;
+    --bark-900: #332C20;
+    --ink: #1A1812;
+
+    --bg: var(--cream-50);
+    --fg: var(--ink);
+    --muted: var(--bark-600);
+    --surface: #FFFFFF;
+    --surface-2: var(--cream-100);
+    --border: var(--cream-200);
+    --accent: var(--terracotta-600);
+    --accent-2: var(--mustard-600);
+    --primary: var(--moss-600);
+
+    --header-h: 72px;
+    --max-w: 1240px;
+    --map-max-w: 1400px;
+  }
+
+  html, body { margin: 0; padding: 0; height: 100%; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  button, input, textarea, select { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+
+  h1, h2, h3, h4 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700; letter-spacing: -0.025em;
+    line-height: 1.05; margin: 0;
+  }
+
+  .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+
+  /* ─── HEADER ─────────────────────────────────────── */
+  header.site {
+    position: sticky; top: 0; z-index: 400;
+    background: rgba(247, 242, 231, 0.78);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  header .row { display: flex; align-items: center; gap: 28px; height: var(--header-h); }
+  nav.primary { display: flex; gap: 28px; margin-left: 40px; flex: 1; }
+  nav.primary a { font-size: 14px; font-weight: 500; color: var(--fg); transition: color 0.15s; }
+  nav.primary a:hover { color: var(--accent); }
+  header .actions { display: flex; gap: 8px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 0 18px; height: 42px; border-radius: 100px;
+    font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid transparent;
+    transition: transform 0.12s, background 0.15s, color 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.primary { background: var(--accent); color: #F7F2E7; }
+  .btn.primary:hover { background: var(--terracotta-700); }
+  .btn.ghost { background: transparent; border-color: var(--border); color: var(--fg); }
+  .btn.ghost:hover { background: var(--surface-2); }
+  .btn.sm { height: 34px; padding: 0 14px; font-size: 13px; }
+
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 100px;
+    background: transparent; border: 1px solid var(--border);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    color: var(--fg);
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+
+  .logo { display: inline-flex; align-items: center; line-height: 1; color: var(--fg); }
+  .logo svg { flex-shrink: 0; display: block; }
+  .logo .leaf { fill: var(--primary); }
+  .logo .word { fill: currentColor; }
+
+  /* ─── PAGE LAYOUT ────────────────────────────────── */
+  .page-head {
+    padding: 28px 24px 18px;
+    max-width: var(--map-max-w); margin: 0 auto;
+    display: flex; align-items: end; justify-content: space-between; gap: 24px;
+    flex-wrap: wrap;
+  }
+  .page-head .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 12px; border-radius: 100px;
+    background: var(--moss-100); color: var(--moss-700);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+  }
+  .page-head h1 {
+    font-size: clamp(30px, 3.4vw, 44px);
+    margin-top: 14px;
+  }
+  .page-head h1 em { font-style: normal; color: var(--accent); }
+  .page-head .lead {
+    color: var(--muted); margin-top: 8px; font-size: 15px; max-width: 520px;
+  }
+  .page-head .legend {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 12px 16px;
+    box-shadow: 0 4px 12px rgba(28,42,30,0.04);
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); font-weight: 500;
+  }
+  .legend-item .swatch {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  }
+
+  /* ─── MAIN APP SHELL ─────────────────────────────── */
+  .map-shell {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 16px;
+    padding: 0 24px 24px;
+    max-width: var(--map-max-w);
+    margin: 0 auto;
+    height: calc(100vh - var(--header-h) - 200px);
+    min-height: 620px;
+  }
+
+  /* ─── SIDEBAR ────────────────────────────────────── */
+  .sidebar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 4px 16px rgba(28,42,30,0.04);
+  }
+  .sidebar .filters {
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar .search-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 100px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .sidebar .search-row:focus-within {
+    background: var(--surface);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(184,90,60,0.10);
+  }
+  .sidebar .search-row input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-size: 14px; color: var(--fg); height: 28px;
+  }
+  .sidebar .search-row input::placeholder { color: var(--muted); }
+  .sidebar .search-row .clear {
+    background: transparent; border: none; cursor: pointer; color: var(--muted);
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+  }
+
+  .filter-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin: 16px 0 8px;
+  }
+  .chip-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .chip {
+    height: 32px; padding: 0 12px; border-radius: 100px;
+    background: var(--surface); color: var(--fg); border: 1px solid var(--border);
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+  }
+  .chip:hover { transform: translateY(-1px); }
+  .chip.active { background: var(--accent); color: #F7F2E7; border-color: var(--accent); }
+  .chip .ic { font-size: 13px; }
+
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0;
+    font-size: 13.5px; font-weight: 500;
+  }
+  .toggle-row .l { display: flex; align-items: center; gap: 8px; color: var(--fg); }
+  .toggle-row .l .desc { color: var(--muted); font-size: 11.5px; font-weight: 400; }
+
+  .switch {
+    width: 40px; height: 24px; border-radius: 100px; background: var(--sand-200);
+    border: none; padding: 2px; cursor: pointer; position: relative; transition: background 0.18s;
+    flex-shrink: 0;
+  }
+  .switch.on { background: var(--accent); }
+  .switch::after {
+    content: ""; display: block; width: 20px; height: 20px; border-radius: 100px;
+    background: white; transition: transform 0.18s; box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .switch.on::after { transform: translateX(16px); }
+
+  .slider-row { display: flex; align-items: center; gap: 10px; padding: 6px 0 4px; }
+  .slider-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .slider-row .v {
+    font-size: 13px; font-weight: 700; color: var(--fg); min-width: 38px; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .city-select, .sort-select {
+    width: 100%; padding: 10px 14px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 14px; color: var(--fg); outline: none;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235C4F3A' stroke-width='2' stroke-linecap='round'><path d='M6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat; background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  .reset-btn {
+    width: 100%; margin-top: 10px;
+    height: 38px; border-radius: 100px; border: 1px dashed var(--sand-300);
+    background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .reset-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Results list */
+  .results-head {
+    padding: 14px 18px 8px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .results-head .count {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 16px; letter-spacing: -0.015em;
+  }
+  .results-head .sort {
+    font-size: 12px; color: var(--muted); cursor: pointer; font-weight: 600;
+    background: transparent; border: none;
+  }
+  .results-list {
+    flex: 1; overflow-y: auto; padding: 4px 12px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+    scroll-behavior: smooth;
+  }
+  .results-list::-webkit-scrollbar { width: 8px; }
+  .results-list::-webkit-scrollbar-thumb { background: var(--cream-200); border-radius: 100px; }
+  .results-list::-webkit-scrollbar-track { background: transparent; }
+
+  .result-card {
+    display: flex; gap: 12px; padding: 10px;
+    border-radius: 14px; cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.12s, border-color 0.12s, transform 0.12s;
+  }
+  .result-card:hover { background: var(--surface-2); }
+  .result-card.active { background: var(--surface-2); border-color: var(--accent); }
+  .result-card .thumb {
+    width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #F7F2E7; position: relative; overflow: hidden;
+  }
+  .result-card .thumb::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 25% 20%, rgba(255,255,255,0.20), transparent 60%);
+  }
+  .result-card .body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+  .result-card .name {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 14.5px; letter-spacing: -0.015em;
+    line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .result-card .meta {
+    display: flex; align-items: center; gap: 6px; margin-top: 3px;
+    font-size: 11.5px; color: var(--muted);
+  }
+  .result-card .meta .open { color: var(--moss-600); font-weight: 600; }
+  .result-card .meta .closed { color: var(--terracotta-700); font-weight: 600; }
+  .result-card .meta .city { font-weight: 600; color: var(--fg); }
+  .result-card .meta .rt { color: var(--fg); font-weight: 700; }
+  .result-card .verif {
+    display: inline-flex; align-items: center; gap: 3px;
+    color: var(--moss-600);
+    font-size: 11px; font-weight: 600;
+  }
+
+  .empty-state {
+    padding: 48px 20px; text-align: center; color: var(--muted);
+  }
+  .empty-state .big {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 20px; color: var(--fg);
+    letter-spacing: -0.02em; margin-bottom: 6px;
+  }
+
+  /* ─── MAP CONTAINER ──────────────────────────────── */
+  .map-wrap {
+    position: relative;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    box-shadow: 0 8px 32px rgba(28,42,30,0.10);
+  }
+  #map { position: absolute; inset: 0; height: 100%; width: 100%; z-index: 1; }
+
+  /* Style the leaflet base layer to match brand */
+  .leaflet-container { background: var(--cream-100); font-family: inherit; }
+  .leaflet-tile-pane { filter: saturate(0.78) contrast(0.92) hue-rotate(-8deg) brightness(1.02); }
+  html.dark-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) saturate(0.6) brightness(0.92); }
+
+  /* Custom controls */
+  .map-controls {
+    position: absolute; top: 14px; right: 14px; z-index: 10;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .map-ctrl {
+    width: 42px; height: 42px; border-radius: 100px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--fg); padding: 0;
+    box-shadow: 0 4px 12px rgba(28,42,30,0.12);
+    transition: transform 0.12s, background 0.15s;
+  }
+  .map-ctrl:hover { transform: translateY(-1px); background: white; }
+  .map-ctrl.active { background: var(--accent); color: #F7F2E7; border-color: var(--accent); }
+
+  .ctrl-stack {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(28,42,30,0.12);
+    overflow: hidden;
+  }
+  .ctrl-stack button {
+    width: 42px; height: 42px;
+    border: none; border-bottom: 1px solid var(--border);
+    background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--fg);
+  }
+  .ctrl-stack button:last-child { border-bottom: none; }
+  .ctrl-stack button:hover { background: var(--surface-2); }
+
+  /* Quick city jump strip */
+  .city-strip {
+    position: absolute; top: 14px; left: 14px; z-index: 10;
+    display: flex; gap: 6px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 5px;
+    box-shadow: 0 4px 12px rgba(28,42,30,0.10);
+    max-width: calc(100% - 80px); overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .city-strip::-webkit-scrollbar { display: none; }
+  .city-strip button {
+    height: 32px; padding: 0 14px; border-radius: 100px; border: none;
+    background: transparent; color: var(--fg);
+    font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+  }
+  .city-strip button:hover { background: var(--surface-2); }
+  .city-strip button.active { background: var(--accent); color: #F7F2E7; }
+
+  /* Bottom info card on map */
+  .map-info {
+    position: absolute; left: 14px; bottom: 14px; z-index: 10;
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 12px 16px;
+    box-shadow: 0 8px 24px rgba(28,42,30,0.10);
+    display: flex; align-items: center; gap: 16px;
+    font-size: 12.5px; color: var(--muted); font-weight: 500;
+    max-width: calc(100% - 80px);
+  }
+  .map-info strong { color: var(--fg); font-weight: 700; }
+  .map-info .sep { width: 1px; height: 16px; background: var(--border); }
+
+  /* ─── LEAFLET MARKER + POPUP STYLING ─────────────── */
+  .ws-pin-icon { background: transparent !important; border: none !important; }
+  .ws-pin {
+    transform-origin: 50% 100%;
+    transition: transform 0.18s cubic-bezier(0.32,0.72,0,1);
+    cursor: pointer;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.22));
+  }
+  .ws-pin:hover { transform: scale(1.18) translateY(-2px); }
+  .ws-pin.active { transform: scale(1.28) translateY(-3px); }
+  .ws-pin.closed { opacity: 0.62; }
+
+  .leaflet-popup-content-wrapper {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 14px 36px rgba(28,42,30,0.18);
+    padding: 0;
+  }
+  .leaflet-popup-content { margin: 0; padding: 0; min-width: 240px; }
+  .leaflet-popup-tip { background: var(--surface); border: 1px solid var(--border); }
+  .leaflet-popup-close-button {
+    width: 28px !important; height: 28px !important;
+    line-height: 26px !important;
+    color: var(--muted) !important;
+    font-size: 18px !important;
+    top: 6px !important; right: 6px !important;
+  }
+
+  .ws-popup { padding: 0; overflow: hidden; border-radius: 16px; }
+  .ws-popup .hero {
+    height: 88px; position: relative; display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 36px;
+  }
+  .ws-popup .hero::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 25% 20%, rgba(255,255,255,0.25), transparent 55%),
+                radial-gradient(circle at 75% 90%, rgba(0,0,0,0.20), transparent 60%);
+  }
+  .ws-popup .hero .badge {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(255,255,255,0.94); color: var(--ink);
+    padding: 3px 9px; border-radius: 100px;
+    font-size: 11px; font-weight: 700; letter-spacing: -0.005em;
+    z-index: 1;
+  }
+  .ws-popup .body { padding: 12px 14px 14px; }
+  .ws-popup .name {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 17px; letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .ws-popup .row {
+    display: flex; align-items: center; gap: 6px; margin-top: 6px;
+    font-size: 12px; color: var(--muted);
+  }
+  .ws-popup .row .open { color: var(--moss-600); font-weight: 600; }
+  .ws-popup .row .closed { color: var(--terracotta-700); font-weight: 600; }
+  .ws-popup .row .rt { color: var(--ink); font-weight: 700; }
+  .ws-popup .addr { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .ws-popup .actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;
+  }
+  .ws-popup .pop-btn {
+    height: 34px; border-radius: 100px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--fg);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .ws-popup .pop-btn.primary { background: var(--accent); color: #F7F2E7; border-color: var(--accent); }
+  .ws-popup .pop-btn:hover { transform: translateY(-1px); transition: transform 0.12s; }
+
+  .leaflet-control-attribution {
+    background: rgba(255,255,255,0.85) !important;
+    font-size: 10px !important;
+    border-radius: 6px 0 0 0 !important;
+    padding: 2px 8px !important;
+    color: var(--muted) !important;
+  }
+  .leaflet-control-attribution a { color: var(--accent) !important; }
+
+  /* User location pulse */
+  .ws-me {
+    position: relative; width: 18px; height: 18px;
+  }
+  .ws-me .dot {
+    width: 18px; height: 18px; border-radius: 100px;
+    background: var(--accent); border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.22);
+  }
+  .ws-me .pulse {
+    position: absolute; inset: -2px; border-radius: 100px;
+    background: rgba(184,90,60,0.30);
+    animation: pulse 1.6s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+
+  /* ─── DETAIL DRAWER (slides in from right) ──────── */
+  .drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(20,20,15,0.40); z-index: 500;
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.18s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0;} to { opacity: 1;} }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 501;
+    width: min(440px, 100vw);
+    background: var(--bg); overflow-y: auto;
+    box-shadow: -16px 0 40px rgba(0,0,0,0.18);
+    animation: slideR 0.28s cubic-bezier(0.32,0.72,0,1);
+  }
+  @keyframes slideR { from { transform: translateX(100%);} to { transform: none;} }
+  .drawer-hero {
+    height: 200px; position: relative; display: flex; align-items: center; justify-content: center;
+    color: #F7F2E7; font-size: 100px;
+  }
+  .drawer-hero::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 25% 20%, rgba(255,255,255,0.18), transparent 55%),
+                radial-gradient(circle at 75% 90%, rgba(0,0,0,0.22), transparent 60%);
+  }
+  .drawer-hero .icon { opacity: 0.55; position: relative; z-index: 1; }
+  .drawer-hero .controls {
+    position: absolute; top: 14px; left: 14px; right: 14px; z-index: 2;
+    display: flex; justify-content: space-between;
+  }
+  .circle-btn {
+    width: 38px; height: 38px; border-radius: 100px;
+    background: rgba(255,255,255,0.94);
+    border: none; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .drawer-body { padding: 22px 24px 32px; }
+  .drawer-body h2 {
+    font-size: 28px; margin-top: 4px;
+  }
+  .drawer-body .pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .drawer-body .pill {
+    font-size: 11px; font-weight: 600;
+    padding: 5px 11px; border-radius: 100px;
+  }
+  .drawer-body .info-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    font-size: 13.5px; color: var(--muted); flex-wrap: wrap;
+  }
+  .drawer-body .info-row .rt { color: var(--fg); font-weight: 700; }
+  .drawer-body .actions-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 18px;
+  }
+  .drawer-body .action-btn {
+    height: 44px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--fg);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .drawer-body .action-btn.primary { background: var(--accent); color: #F7F2E7; border: none; }
+  .drawer-body .action-btn:hover { background: var(--surface-2); }
+  .drawer-body .action-btn.primary:hover { background: var(--terracotta-700); }
+  .drawer-body h3 {
+    font-size: 17px; margin: 22px 0 8px; letter-spacing: -0.015em;
+  }
+  .drawer-body p.desc {
+    font-size: 14px; color: var(--muted); margin: 0; line-height: 1.55;
+  }
+  .drawer-body .tag {
+    font-size: 11px; font-weight: 500; color: var(--muted);
+    padding: 4px 10px; border-radius: 100px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .drawer-body .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+  .hours-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .hours-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12.5px; color: var(--muted); }
+  .hours-row.today { color: var(--fg); font-weight: 700; }
+  .addr-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    margin-top: 8px;
+  }
+  .addr-card .a { font-size: 13px; font-weight: 600; }
+  .addr-card .b { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ─── TOAST ──────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--moss-800); color: var(--cream-50);
+    padding: 12px 22px; border-radius: 100px; font-size: 13px; font-weight: 600;
+    z-index: 999; box-shadow: 0 10px 30px rgba(0,0,0,0.30);
+    animation: toastIn 0.3s ease-out;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px);} to { opacity: 1; transform: translate(-50%, 0);} }
+
+  /* ─── FOOTER STRIP (mini) ────────────────────────── */
+  footer.mini {
+    background: var(--moss-900); color: var(--cream-50);
+    padding: 22px 0; margin-top: 24px;
+    font-size: 13px;
+  }
+  footer.mini .row {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    color: rgba(247,242,231,0.62);
+  }
+  footer.mini a { color: rgba(247,242,231,0.8); }
+  footer.mini a:hover { color: var(--cream-50); }
+  footer.mini .links { display: flex; gap: 18px; }
+
+  /* ─── RESPONSIVE ─────────────────────────────────── */
+  .menu-toggle { display: none; }
+
+  @media (max-width: 1100px) {
+    nav.primary { display: none; }
+    .menu-toggle { display: inline-flex; }
+    .map-shell {
+      grid-template-columns: 1fr;
+      height: auto; min-height: 0;
+    }
+    .sidebar { max-height: none; }
+    .results-list { max-height: 380px; }
+    .map-wrap { height: 60vh; min-height: 480px; }
+  }
+  @media (max-width: 720px) {
+    .container { padding: 0 16px; }
+    .map-shell { padding: 0 12px 16px; gap: 12px; }
+    .page-head { padding: 20px 16px 14px; gap: 16px; }
+    .page-head h1 { font-size: 28px; }
+    .page-head .legend { display: none; }
+    header .row { gap: 12px; }
+    header .actions .icon-btn:nth-child(3),
+    header .actions .icon-btn:nth-child(4) { display: none; }
+    .city-strip { left: 8px; max-width: calc(100% - 64px); }
+    .map-controls { right: 8px; top: 8px; }
+    .map-info { left: 8px; bottom: 8px; max-width: calc(100% - 16px); }
+    .drawer { width: 100vw; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+// ──────────────────────────────────────────────────────────────────────────
+// DATA
+// ──────────────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: "disp",  label: "Dispenzáře",   icon: "🌿", color: "moss",       hex: "#3D5132" },
+  { id: "cbd",   label: "CBD obchody",  icon: "🧴", color: "moss",       hex: "#52693E" },
+  { id: "cafe",  label: "Kavárny",      icon: "☕", color: "terracotta", hex: "#B85A3C" },
+  { id: "rest",  label: "Restaurace",   icon: "🍴", color: "terracotta", hex: "#94422A" },
+  { id: "bar",   label: "Bary",         icon: "🍷", color: "mustard",    hex: "#C8902A" },
+  { id: "shop",  label: "Coffeeshopy",  icon: "🌬", color: "moss",       hex: "#2C3A26" },
+  { id: "event", label: "Akce",         icon: "✦",  color: "mustard",    hex: "#E0A93A" },
+];
+
+const CITIES = [
+  { id: "all",   label: "Celá ČR",        center: [49.74, 15.34], zoom: 7  },
+  { id: "praha", label: "Praha",          center: [50.0875, 14.4214], zoom: 12 },
+  { id: "brno",  label: "Brno",           center: [49.1951, 16.6068], zoom: 13 },
+  { id: "ostrava", label: "Ostrava",      center: [49.8209, 18.2625], zoom: 13 },
+  { id: "plzen", label: "Plzeň",          center: [49.7384, 13.3736], zoom: 13 },
+  { id: "olomouc", label: "Olomouc",      center: [49.5938, 17.2509], zoom: 13 },
+  { id: "liberec", label: "Liberec",      center: [50.7671, 15.0562], zoom: 13 },
+  { id: "hk",    label: "Hradec Králové", center: [50.2104, 15.8252], zoom: 13 },
+  { id: "cb",    label: "České Budějovice", center: [48.9745, 14.4747], zoom: 13 },
+  { id: "kv",    label: "Karlovy Vary",   center: [50.2306, 12.8714], zoom: 13 },
+  { id: "zlin",  label: "Zlín",           center: [49.2266, 17.6668], zoom: 13 },
+];
+
+// SPOTS — ~36 plausible places across Czech Republic with real coordinates
+const SPOTS = [
+  // ── PRAHA ───────────────────────────────────────────────
+  { id: 1,  name: "Café Listopad",        cat: "cafe", city: "praha", area: "Praha 7",   address: "Veletržní 822/15, Praha 7",    lat: 50.1024, lng: 14.4292, open: true,  hours: "do 22:00", rating: 4.8, reviews: 142, verified: true,  img: "moss",       tags: ["specialty kafe","CBD menu","pet-friendly"], desc: "Útulná specialty kavárna v Holešovicích. Drobné CBD menu, knihy zdarma, personál nechá hosty sedět tak dlouho, jak potřebují." },
+  { id: 2,  name: "Green Republic",       cat: "disp", city: "praha", area: "Praha 1",   address: "Národní 25, Praha 1",          lat: 50.0808, lng: 14.4173, open: true,  hours: "do 20:00", rating: 4.9, reviews: 318, verified: true,  img: "terracotta", tags: ["medical","ověřeno","výběr 40+"], desc: "Profesionální dispenzář v centru. Široký výběr přes 40 odrůd, certifikovaný personál a klidná atmosféra." },
+  { id: 3,  name: "Konopná Lékárna",      cat: "cbd",  city: "praha", area: "Praha 2",   address: "Vinohradská 110, Praha 2",     lat: 50.0779, lng: 14.4528, open: false, hours: "otevře 9:00", rating: 4.6, reviews: 89,  verified: true,  img: "mustard",    tags: ["CBD","extrakty","oleje"], desc: "Specializovaný CBD obchod. Oleje, extrakty, kapsle. Personál umí poradit, ne přeprodat." },
+  { id: 4,  name: "Bistro Sedmička",      cat: "rest", city: "praha", area: "Praha 7",   address: "Dukelských hrdinů 19, Praha 7",lat: 50.0973, lng: 14.4285, open: true,  hours: "do 23:00", rating: 4.7, reviews: 211, verified: true,  img: "terracotta", tags: ["brunch","CBD koktejly","terasa"], desc: "Brunch bistro s CBD koktejlovým menu a velkou terasou. Skvělé na sobotní dopoledne." },
+  { id: 5,  name: "Mlýnská Kavárna",      cat: "cafe", city: "praha", area: "Praha 5",   address: "Mlýnská 4, Praha 5",            lat: 50.0716, lng: 14.4081, open: true,  hours: "do 19:00", rating: 4.5, reviews: 76,  verified: false, img: "moss",       tags: ["víkend brunch","tichý kout","knihy"], desc: "Knižní kavárna u řeky. Tichá, plná lidí s laptopy a knihami. Dobrá káva i čaj." },
+  { id: 6,  name: "Bar Pětka",            cat: "bar",  city: "praha", area: "Praha 5",   address: "Štefánikova 5, Praha 5",        lat: 50.0738, lng: 14.4045, open: true,  hours: "do 02:00", rating: 4.4, reviews: 198, verified: true,  img: "mustard",    tags: ["natural","DJ","zahrádka"], desc: "Natural wine bar s DJ víkendy a velkou zahrádkou. Friendly k pozdním hostům." },
+  { id: 7,  name: "Highline Coffeeshop",  cat: "shop", city: "praha", area: "Praha 4",   address: "Pankrácká 14, Praha 4",         lat: 50.0464, lng: 14.4366, open: true,  hours: "do 24:00", rating: 4.7, reviews: 504, verified: true,  img: "moss",       tags: ["lounge","wifi","menu 20+"], desc: "Coffeeshop v NL stylu. Lounge sezení, menu 20+ položek, wifi, pohodový personál." },
+  { id: 8,  name: "Kanep CBD",            cat: "cbd",  city: "praha", area: "Praha 8",   address: "Sokolovská 200, Praha 8",      lat: 50.1037, lng: 14.4595, open: true,  hours: "do 19:00", rating: 4.5, reviews: 64,  verified: true,  img: "moss",       tags: ["CBD oleje","kosmetika","lokální"], desc: "Lokální CBD značka. Vlastní výroba, transparentní lab testy. Personál ze farmářské scény." },
+  { id: 9,  name: "Náplavka Café",        cat: "cafe", city: "praha", area: "Praha 2",   address: "Rašínovo nábřeží, Praha 2",    lat: 50.0700, lng: 14.4124, open: true,  hours: "do 22:00", rating: 4.6, reviews: 230, verified: true,  img: "terracotta", tags: ["říční pohled","brunch","CBD limonády"], desc: "Kavárna na náplavce s výhledem na Vltavu. CBD limonády, doma pečené koláče." },
+  { id: 10, name: "Vinohradský Pivovar",  cat: "rest", city: "praha", area: "Praha 3",   address: "Korunní 106, Praha 3",         lat: 50.0735, lng: 14.4636, open: true,  hours: "do 24:00", rating: 4.6, reviews: 412, verified: true,  img: "mustard",    tags: ["řemeslné pivo","jídlo","rodinné"], desc: "Tradiční hospoda s řemeslnými pivy a klasickou českou kuchyní s moderním twistem." },
+  { id: 11, name: "Žižkovská Akce",       cat: "event",city: "praha", area: "Praha 3",   address: "Bořivojova, Praha 3",          lat: 50.0855, lng: 14.4513, open: true,  hours: "víkend",   rating: 4.8, reviews: 56,  verified: false, img: "mustard",    tags: ["pop-up","DJs","komunita"], desc: "Pravidelný komunitní pop-up event s DJs, jídlem a friendly atmosférou. Sleduj IG pro datum." },
+  { id: 12, name: "Karlínský Dispenzář",  cat: "disp", city: "praha", area: "Praha 8",   address: "Křižíkova 50, Praha 8",        lat: 50.0921, lng: 14.4469, open: true,  hours: "do 20:00", rating: 4.7, reviews: 189, verified: true,  img: "terracotta", tags: ["medical","konzultace","klid"], desc: "Diskrétní dispenzář s individuálním přístupem. Konzultace s odborníkem na pozvání." },
+
+  // ── BRNO ────────────────────────────────────────────────
+  { id: 13, name: "Brno Cannabis Hub",    cat: "disp", city: "brno",  area: "Brno-střed",address: "Masarykova 32, Brno",          lat: 49.1933, lng: 16.6090, open: true,  hours: "do 19:00", rating: 4.8, reviews: 247, verified: true,  img: "moss",       tags: ["medical","výběr","poradenství"], desc: "Hlavní moravský dispenzář. Široký sortiment, přátelská atmosféra, vzdělávací akce." },
+  { id: 14, name: "Café Tungsram",        cat: "cafe", city: "brno",  area: "Brno-střed",address: "Veveří 12, Brno",              lat: 49.2014, lng: 16.6014, open: true,  hours: "do 22:00", rating: 4.7, reviews: 184, verified: true,  img: "terracotta", tags: ["specialty","craft beer","večery"], desc: "Industriální specialty café s craft beer výběrem a literárními večery každou středu." },
+  { id: 15, name: "Hroznová Bar",         cat: "bar",  city: "brno",  area: "Brno-střed",address: "Hroznová 8, Brno",             lat: 49.1898, lng: 16.6096, open: true,  hours: "do 03:00", rating: 4.5, reviews: 312, verified: true,  img: "mustard",    tags: ["koktejly","late night","DJs"], desc: "Trendy bar v centru Brna s craft koktejly a DJ víkendy. Pozdní otevírací doba." },
+  { id: 16, name: "Hempík Brno",          cat: "cbd",  city: "brno",  area: "Brno-Královo Pole", address: "Palackého třída 78, Brno", lat: 49.2192, lng: 16.5988, open: true,  hours: "do 18:00", rating: 4.4, reviews: 71,  verified: false, img: "moss",       tags: ["CBD","semínka","poradna"], desc: "Konopný obchod s širokým sortimentem od olejů po semínka. Ochotná poradna." },
+  { id: 17, name: "Lužánky Bistro",       cat: "rest", city: "brno",  area: "Brno-Lužánky",address: "Lidická 50, Brno",            lat: 49.2046, lng: 16.6116, open: true,  hours: "do 22:00", rating: 4.6, reviews: 156, verified: true,  img: "terracotta", tags: ["bistro","fresh","CBD limča"], desc: "Lehké bistro u parku Lužánky. Sezónní menu, čerstvé saláty, CBD limonády." },
+
+  // ── OSTRAVA ─────────────────────────────────────────────
+  { id: 18, name: "Stodolní Coffeeshop",  cat: "shop", city: "ostrava", area: "Stodolní", address: "Stodolní 18, Ostrava",       lat: 49.8351, lng: 18.2917, open: true,  hours: "do 02:00", rating: 4.6, reviews: 287, verified: true,  img: "moss",       tags: ["lounge","Stodolní","DJ"], desc: "Coffeeshop přímo na Stodolní. Lounge atmosféra, DJ ve čtvrtek až sobotu." },
+  { id: 19, name: "Vítkovice CBD",        cat: "cbd",  city: "ostrava", area: "Vítkovice",address: "Závodní 12, Ostrava",         lat: 49.8002, lng: 18.2541, open: true,  hours: "do 18:00", rating: 4.5, reviews: 53,  verified: true,  img: "moss",       tags: ["CBD","lab testy","výběr"], desc: "Industrial-style CBD obchod ve Vítkovicích. Lab certifikované produkty, transparentní původ." },
+  { id: 20, name: "Café Kytka",           cat: "cafe", city: "ostrava", area: "Poruba",   address: "Hlavní třída 22, Ostrava",   lat: 49.8307, lng: 18.1665, open: true,  hours: "do 21:00", rating: 4.7, reviews: 124, verified: false, img: "terracotta", tags: ["coworking","brunch","klid"], desc: "Klidná kavárna v Porubě s coworkingem a víkendovým brunchem. Vlasní pražírna." },
+
+  // ── PLZEŇ ───────────────────────────────────────────────
+  { id: 21, name: "Plzeň Hemp Store",     cat: "cbd",  city: "plzen", area: "Plzeň-střed",address: "Klatovská 28, Plzeň",         lat: 49.7437, lng: 13.3753, open: true,  hours: "do 18:00", rating: 4.6, reviews: 92,  verified: true,  img: "moss",       tags: ["CBD","kosmetika","poradna"], desc: "Hlavní plzeňský konopný obchod. Široký výběr olejů, kosmetiky a doplňků." },
+  { id: 22, name: "Náměstí Café",         cat: "cafe", city: "plzen", area: "Plzeň-střed",address: "Náměstí Republiky 5, Plzeň",  lat: 49.7475, lng: 13.3776, open: true,  hours: "do 22:00", rating: 4.7, reviews: 211, verified: true,  img: "terracotta", tags: ["specialty","brunch","výhled"], desc: "Specialty kavárna s výhledem na náměstí a katedrálu sv. Bartoloměje." },
+
+  // ── OLOMOUC ─────────────────────────────────────────────
+  { id: 23, name: "Hanácký Dispenzář",    cat: "disp", city: "olomouc", area: "Olomouc-střed", address: "Ostružnická 14, Olomouc", lat: 49.5944, lng: 17.2531, open: true,  hours: "do 19:00", rating: 4.8, reviews: 134, verified: true,  img: "terracotta", tags: ["medical","konzultace","výběr"], desc: "Profesionální dispenzář na Hané. Klidný interiér, individuální přístup k zákazníkům." },
+  { id: 24, name: "Caffé Mahler",         cat: "cafe", city: "olomouc", area: "Olomouc-střed", address: "Horní náměstí 9, Olomouc", lat: 49.5938, lng: 17.2509, open: true,  hours: "do 23:00", rating: 4.6, reviews: 178, verified: false, img: "moss",       tags: ["specialty","koncerty","klasika"], desc: "Tradiční kavárna s klasickou atmosférou a občasnými klavírními večery." },
+
+  // ── LIBEREC ─────────────────────────────────────────────
+  { id: 25, name: "Liberec Coffeeshop",   cat: "shop", city: "liberec", area: "Liberec",  address: "Pražská 14, Liberec",        lat: 50.7671, lng: 15.0586, open: true,  hours: "do 24:00", rating: 4.5, reviews: 142, verified: true,  img: "moss",       tags: ["lounge","wifi","klid"], desc: "Klidný coffeeshop v severních Čechách. Skvělý spot po procházce do Ještědu." },
+  { id: 26, name: "Soukenné Bistro",      cat: "rest", city: "liberec", area: "Liberec",  address: "Soukenné náměstí 4, Liberec", lat: 50.7689, lng: 15.0571, open: true,  hours: "do 22:00", rating: 4.7, reviews: 98,  verified: true,  img: "terracotta", tags: ["lokální","sezónní","brunch"], desc: "Bistro se zaměřením na lokální suroviny a sezónní menu z severních Čech." },
+
+  // ── HRADEC KRÁLOVÉ ──────────────────────────────────────
+  { id: 27, name: "Hradecký Hempík",      cat: "cbd",  city: "hk",    area: "Hradec Králové", address: "Třída Karla IV. 12, HK", lat: 50.2102, lng: 15.8328, open: true,  hours: "do 18:00", rating: 4.4, reviews: 47,  verified: false, img: "moss",       tags: ["CBD","oleje","přátelské"], desc: "Rodinný CBD obchod v centru Hradce. Osobní přístup, ochotně poradí." },
+  { id: 28, name: "Café U Koruny",        cat: "cafe", city: "hk",    area: "Hradec Králové", address: "Velké náměstí 30, HK",   lat: 50.2090, lng: 15.8328, open: true,  hours: "do 22:00", rating: 4.6, reviews: 165, verified: true,  img: "terracotta", tags: ["historický","specialty","brunch"], desc: "Historická kavárna na Velkém náměstí s nadprůměrnou specialty kávou." },
+
+  // ── ČESKÉ BUDĚJOVICE ────────────────────────────────────
+  { id: 29, name: "Budějovický Bar",      cat: "bar",  city: "cb",    area: "České Budějovice",address: "Krajinská 28, Č. Budějovice", lat: 48.9737, lng: 14.4757, open: true, hours: "do 03:00", rating: 4.5, reviews: 213, verified: true,  img: "mustard",    tags: ["koktejly","DJs","late night"], desc: "Pravidelná zastávka noční scény v Budějicích. Kreativní koktejly, DJ víkendy." },
+  { id: 30, name: "Jihočeský CBD",        cat: "cbd",  city: "cb",    area: "České Budějovice",address: "Lannova 12, Č. Budějovice",  lat: 48.9759, lng: 14.4790, open: true, hours: "do 18:00", rating: 4.5, reviews: 38,  verified: true,  img: "moss",       tags: ["CBD","lokální","poradna"], desc: "Jihočeský CBD obchod se zaměřením na lokální produkty a transparentní původ." },
+
+  // ── KARLOVY VARY ────────────────────────────────────────
+  { id: 31, name: "Spa Café Karlovy",     cat: "cafe", city: "kv",    area: "Karlovy Vary", address: "Stará Louka 10, K. Vary",    lat: 50.2236, lng: 12.8830, open: true, hours: "do 22:00", rating: 4.8, reviews: 267, verified: true,  img: "terracotta", tags: ["lázně","klasika","výhled"], desc: "Kavárna v lázeňském centru Karlových Varů. Skvělé místo po projití kolonády." },
+
+  // ── ZLÍN ────────────────────────────────────────────────
+  { id: 32, name: "Zlín Hemp Cafe",       cat: "cafe", city: "zlin",  area: "Zlín",      address: "Náměstí Míru 12, Zlín",      lat: 49.2266, lng: 17.6668, open: true, hours: "do 21:00", rating: 4.6, reviews: 89,  verified: false, img: "moss",       tags: ["specialty","CBD menu","komunita"], desc: "Komunitní kavárna s drobným CBD menu. Pravidelné jamy a otevřené mikrofony." },
+
+  // ── DOPLŇKOVÉ AKCE ──────────────────────────────────────
+  { id: 33, name: "Hempfest Praha",       cat: "event",city: "praha", area: "Praha 7",   address: "Výstaviště Holešovice, Praha 7", lat: 50.1062, lng: 14.4319, open: true, hours: "květen", rating: 4.9, reviews: 412, verified: true, img: "mustard", tags: ["festival","výroční","velký"], desc: "Největší konopný festival v ČR. Hudba, edukace, komunita. Každý květen na Výstavišti." },
+  { id: 34, name: "Cannafest Brno",       cat: "event",city: "brno",  area: "Brno-výstaviště", address: "Výstaviště 1, Brno",     lat: 49.1854, lng: 16.5827, open: true, hours: "říjen",  rating: 4.7, reviews: 198, verified: true, img: "mustard", tags: ["výstava","B2B","říjen"], desc: "Mezinárodní konopná výstava na brněnském výstavišti. Stánky, přednášky, networking." },
+  { id: 35, name: "420 Praha",            cat: "event",city: "praha", area: "Letná",     address: "Letenské sady, Praha 7",      lat: 50.0985, lng: 14.4191, open: true, hours: "20. dubna", rating: 4.8, reviews: 156, verified: false, img: "mustard", tags: ["výroční","komunita","sady"], desc: "Tradiční komunitní setkání 20. dubna na Letné. Picnic vibes, hudba, friendly lidé." },
+  { id: 36, name: "Konopná Konference",   cat: "event",city: "olomouc", area: "Olomouc-Univerzita", address: "Křížkovského 8, Olomouc", lat: 49.5934, lng: 17.2528, open: true, hours: "září",   rating: 4.6, reviews: 73,  verified: true, img: "mustard", tags: ["edukace","akademická","konference"], desc: "Akademická konference o konopí a jeho aplikacích. Přednášky, panely, networking." },
+];
+
+const TONE = {
+  moss:       "var(--moss-700)",
+  terracotta: "var(--terracotta-600)",
+  mustard:    "var(--mustard-600)",
+};
+const CAT_BADGE = {
+  moss:       { bg: "var(--moss-100)",       fg: "var(--moss-900)" },
+  terracotta: { bg: "var(--terracotta-100)", fg: "var(--terracotta-700)" },
+  mustard:    { bg: "var(--mustard-100)",    fg: "var(--bark-900)" },
+};
+
+// ──────────────────────────────────────────────────────────────────────────
+// LOGO + ICONS
+// ──────────────────────────────────────────────────────────────────────────
+const WORDMARK_PATHS = [
+  "M160.3,28.7c.6-.3,1-.5,1.2-.8.2-.3.3-.6.3-1s-.2-1-.5-1.3c-.4-.3-.9-.5-1.7-.5h-9.3c-.8,0-1.4.2-1.7.5-.4.3-.6.8-.6,1.3s0,.7.3,1c.2.3.5.5.9.7l1.2.3c1,.4,1.5.9,1.8,1.5s.2,1.5-.1,2.5l-7.1,24.9-7.4-25.9c-.3-1-.4-1.7-.2-2.2.1-.4.4-.7.9-.8l1.3-.3c.5-.2.9-.4,1.1-.7.2-.3.4-.6.4-1.1s-.2-1-.6-1.3c-.4-.3-1-.5-1.7-.5h-15.4c-.8,0-1.3.2-1.7.5-.4.3-.6.8-.6,1.3s0,.7.3,1c.2.3.5.5,1,.7l1.2.4c.4.1.7.4.9.6.2.3.4.9.7,1.8l1.2,4.1-7.1,22.2-7.7-25.7c-.2-.9-.3-1.6-.2-2.1.1-.5.4-.8.9-1l1.5-.3c.9-.3,1.3-.9,1.3-1.7s-.2-1-.6-1.3c-.4-.3-1-.5-1.7-.5h-16c-.8,0-1.3.2-1.7.5-.4.3-.6.7-.6,1.3s0,.8.3,1.1c.2.3.5.6,1,.8l1.2.4c.5.2.9.5,1.2.8.3.3.5.8.7,1.5l9.7,31.9c.2.7.3,1.2.4,1.5,0,.3,0,.7,0,1v1.2c0,.6.2,1,.5,1.3s.8.5,1.3.5h9c.5,0,.9-.2,1.3-.5s.5-.8.5-1.3v-1.2c0-.7,0-1.2.1-1.7,0-.5.2-1,.4-1.5l6.3-19.8,6,20.6c.2.7.3,1.2.4,1.5,0,.3,0,.7,0,1v1.2c0,.6.2,1,.5,1.3s.8.5,1.3.5h9.3c.5,0,.9-.2,1.3-.5s.5-.8.5-1.3v-1.2c0-.5,0-1,.1-1.4s.2-1,.4-1.8l8.2-29.1c.4-1.3.8-2.2,1.2-2.9.5-.6,1.1-1.1,1.8-1.4l1-.4Z",
+  "M188.3,53.1c.7-.7,1.1-1.7,1.1-3,0-2.3-.5-4.4-1.6-6.2-1.1-1.8-2.6-3.2-4.7-4.2-2.1-1-4.6-1.5-7.6-1.5s-6.5.7-8.9,2.1c-2.5,1.4-4.4,3.3-5.7,5.8-1.3,2.5-2,5.4-2,8.7s.7,5.6,2.1,7.9,3.3,4,5.8,5.2c2.4,1.3,5.2,1.9,8.3,1.9s5.2-.5,7.4-1.4c2.1-.9,3.8-2.2,5-3.7,1.2-1.6,1.8-3.2,1.9-5,0-.5,0-.9-.3-1.3-.2-.4-.4-.5-.8-.5s-.5,0-.8.2c-.3.2-.7.5-1.2,1-.9,1.1-2,2-3.3,2.5-1.3.5-2.7.8-4.3.8-3,0-5.5-.9-7.3-2.8-1.2-1.3-2-3-2.4-5.2h16.1c1.4,0,2.4-.3,3.1-1ZM176.8,51.3h-8c0-.2,0-.4,0-.7,0-1.9.2-3.5.7-4.8s1.1-2.3,1.9-2.9c.8-.7,1.7-1,2.7-1s2.4.6,3.2,1.9c.8,1.3,1.2,3.2,1.2,5.9s-.6,1.5-1.7,1.5Z",
+  "M221.3,53.1c.7-.7,1.1-1.7,1.1-3,0-2.3-.5-4.4-1.6-6.2-1.1-1.8-2.6-3.2-4.7-4.2s-4.6-1.5-7.6-1.5-6.5.7-8.9,2.1c-2.5,1.4-4.4,3.3-5.7,5.8-1.3,2.5-2,5.4-2,8.7s.7,5.6,2.1,7.9,3.3,4,5.8,5.2c2.4,1.3,5.2,1.9,8.3,1.9s5.2-.5,7.4-1.4c2.1-.9,3.8-2.2,5-3.7,1.2-1.6,1.8-3.2,1.9-5,0-.5,0-.9-.3-1.3-.2-.4-.4-.5-.8-.5s-.5,0-.8.2c-.3.2-.7.5-1.2,1-.9,1.1-2,2-3.3,2.5-1.3.5-2.7.8-4.3.8-3,0-5.5-.9-7.3-2.8-1.2-1.3-2-3-2.4-5.2h16.1c1.4,0,2.4-.3,3.1-1ZM209.8,51.3h-8c0-.2,0-.4,0-.7,0-1.9.2-3.5.7-4.8s1.1-2.3,1.9-2.9c.8-.7,1.7-1,2.7-1s2.4.6,3.2,1.9c.8,1.3,1.2,3.2,1.2,5.9s-.6,1.5-1.7,1.5Z",
+  "M260.2,65.7l-.9-.3c-.3-.1-.6-.4-.7-.7-.2-.3-.2-.9-.2-1.6V24.5c0-.7-.2-1.3-.6-1.7s-1-.7-1.8-.7-1.1,0-1.7.2c-.6.2-1.3.4-2.3.8l-6.3,2.4c-.7.2-1.1.5-1.4.8s-.4.6-.4,1,0,.6.3.9c.2.2.5.4.9.5l1.2.2c.4,0,.6.3.8.5.2.3.3.7.3,1.3v9.4c0,0-.1-.1-.2-.2-1.9-1.1-4.1-1.7-6.6-1.7s-5.6.7-7.9,2.1c-2.3,1.4-4.2,3.3-5.6,5.8-1.4,2.5-2,5.4-2,8.8s.6,5.5,1.7,7.7c1.1,2.2,2.7,4,4.6,5.2,2,1.3,4.2,1.9,6.6,1.9s5.3-.8,7.5-2.3c.9-.6,1.7-1.4,2.5-2.2.1.9.5,1.8,1.2,2.5.9.9,2,1.3,3.2,1.3h7.2c.7,0,1.3-.1,1.6-.4.3-.3.5-.7.5-1.2s0-.7-.3-1c-.2-.3-.5-.5-1-.7ZM242.4,64.2c-1.2,0-2.2-.4-3.1-1.1-.9-.7-1.6-1.9-2.2-3.4s-.8-3.5-.8-6,.3-4.8.8-6.4,1.3-2.9,2.2-3.6c.9-.8,2-1.2,3.2-1.2s2.4.4,3.5,1.1c.4.3.8.7,1.3,1.1v17.2c-.4.4-.7.8-1.1,1.1-1.1.9-2.4,1.3-3.7,1.3Z",
+  "M281.3,28.2c1.5,0,3.1.3,4.6,1,1.5.6,3.1,1.7,4.5,3.2,1.5,1.5,2.9,3.5,4.2,6.1.3.6.7,1,1.1,1.2.5.2,1,.3,1.6,0,.6-.2,1-.5,1.2-1.1s.2-1.1,0-1.7l-2.8-10.2c-.3-1-.6-1.7-1-2-.4-.4-.9-.5-1.4-.5s-1.2.2-1.5.6-.7.7-1,1.1c-.3.4-.7.5-1.2.5s-1.3-.2-2.1-.5c-.8-.4-1.8-.7-3-1s-2.7-.5-4.5-.5c-3.1,0-5.8.6-8.1,1.7-2.3,1.1-4.1,2.7-5.3,4.7-1.3,2-1.9,4.3-1.9,6.9s.4,4.7,1.3,6.6,2.3,3.5,4.2,4.8,4.5,2.5,7.7,3.5c3,.9,5.3,1.8,6.8,2.6,1.5.8,2.6,1.6,3.1,2.5.5.9.8,1.8.8,2.9,0,1.7-.6,3-1.7,3.9-1.1.9-2.7,1.4-4.6,1.4s-2.8-.3-4.2-.8c-1.4-.6-2.7-1.5-4-2.9-1.3-1.4-2.5-3.2-3.8-5.6-.4-.7-.8-1.1-1.2-1.3s-1-.2-1.6,0c-.5.2-.9.5-1.2.9-.2.4-.3.8-.2,1.4l2,10.4c.1.8.4,1.3.7,1.6.4.3.8.5,1.3.5s.8-.1,1.2-.3c.3-.2.7-.5,1-.8.3-.3.6-.5,1-.8s.7-.3,1.2-.3,1,.2,1.8.5c.7.3,1.7.7,2.8,1,1.1.4,2.5.5,4.1.5,3.3,0,6.1-.6,8.4-1.8,2.3-1.2,4.1-2.8,5.4-4.7,1.3-2,1.9-4.2,1.9-6.6,0-2.3-.4-4.3-1.2-6-.9-1.7-2.2-3.3-4.1-4.6-1.9-1.3-4.5-2.6-7.7-3.7-2.9-1-5.1-2-6.6-2.9-1.5-.9-2.5-1.8-3-2.7-.5-.9-.8-1.8-.8-2.9,0-1.7.5-3.1,1.6-4.1s2.6-1.6,4.5-1.6Z",
+  "M332.2,40.1c-1.9-1.3-4.2-1.9-6.6-1.9s-5.2.8-7.4,2.3c-.9.6-1.7,1.4-2.5,2.2v-2.1c0-.7-.2-1.3-.6-1.7-.4-.5-1.1-.7-1.9-.7s-1,0-1.6.2c-.6.2-1.3.4-2.2.8l-5.8,2.4c-.6.3-1.1.5-1.3.8-.2.2-.4.6-.4,1s0,.6.3.9c.2.2.5.4.9.5l1.2.2c.4,0,.6.3.8.5.2.3.3.7.3,1.3v30.8c0,.7,0,1.3-.2,1.6-.2.3-.4.6-.7.7l-1,.3c-.4.2-.8.4-1,.7-.2.3-.3.6-.3,1s.2.9.5,1.2c.3.3.8.4,1.6.4h13.5c.7,0,1.3-.1,1.6-.4.3-.3.5-.7.5-1.2s-.1-.7-.3-1c-.2-.3-.5-.5-1-.7l-1.2-.3c-.4-.1-.6-.4-.8-.7-.2-.3-.2-.9-.2-1.6v-9.7c0,0,.1.1.2.2,1.9,1.1,4.1,1.7,6.6,1.7s5.6-.7,7.9-2.1c2.4-1.4,4.2-3.3,5.6-5.8,1.4-2.5,2-5.4,2-8.8s-.6-5.5-1.7-7.7c-1.1-2.2-2.7-4-4.6-5.3ZM326.3,60.6c-.5,1.7-1.2,2.9-2.2,3.6-.9.8-2,1.2-3.2,1.2s-2.4-.4-3.5-1.1c-.4-.3-.8-.7-1.3-1.1v-17.2c.4-.4.7-.8,1.1-1.1,1.1-.9,2.4-1.3,3.7-1.3s2.2.4,3.2,1.1c.9.7,1.6,1.9,2.2,3.4.5,1.5.8,3.5.8,6s-.3,4.8-.8,6.4Z",
+  "M367.3,40.2c-2.6-1.3-5.5-2-8.9-2s-6.5.7-9,2c-2.6,1.4-4.6,3.2-6.1,5.6-1.5,2.4-2.2,5-2.2,8.1s.7,5.8,2.1,8.2,3.4,4.3,6,5.6c2.6,1.3,5.5,2,8.9,2s6.5-.7,9-2.1c2.6-1.4,4.6-3.2,6.1-5.6,1.5-2.4,2.2-5,2.2-8s-.7-5.9-2.1-8.3-3.4-4.2-5.9-5.6ZM363.3,64c-.6,1-1.5,1.6-2.6,1.8-1.2.2-2.3,0-3.3-.8-1-.7-1.9-1.9-2.7-3.6-.8-1.7-1.5-3.8-2-6.4-.5-2.7-.7-5-.7-6.8s.4-3.2,1.1-4.2,1.5-1.6,2.6-1.8c1.2-.2,2.3,0,3.3.8,1,.7,1.9,1.9,2.7,3.6.8,1.7,1.4,3.8,2,6.5.5,2.7.8,4.9.7,6.8,0,1.8-.5,3.2-1.1,4.3Z",
+  "M400.7,60.2c-.2-.2-.5-.4-.9-.4s-.8.2-1.1.5c-.3.4-.5.8-.8,1.2-.3.5-.6.8-1,1.2-.4.4-1,.5-1.8.5s-1.8-.4-2.3-1.2c-.6-.8-.8-1.9-.8-3.4v-15.9h4.5c1.5,0,2.6-.2,3.2-.7s1-1,1-1.7-.2-.8-.5-1-.8-.4-1.3-.4h-6.9v-6.2c0-.6-.1-1.1-.4-1.5-.3-.3-.7-.5-1.2-.5s-1,.1-1.5.4c-.5.3-1,.7-1.6,1.4l-4.2,5c-.5.5-.9.9-1.2,1.1s-.7.3-1.2.3h-1.8c-.6,0-1,.1-1.4.4-.4.3-.5.7-.5,1.2s.1.7.3,1,.6.5,1.1.6l1.2.4c.5.2.9.4,1.1.7.2.3.3.7.3,1.3v16.1c0,3,.8,5.2,2.5,6.7,1.7,1.5,4.1,2.2,7.1,2.2s3.8-.4,5.4-1.1c1.6-.7,2.8-1.7,3.7-3,.9-1.2,1.3-2.6,1.3-4.1s-.1-1-.3-1.3Z",
+];
+const LEAF_PATHS = [
+  "M45.4,7.3c-20.1,0-36.4,13.7-36.4,36.7s36.4,46.6,36.4,46.6c0,0,36.4-23.6,36.4-46.6S65.5,7.3,45.4,7.3ZM68.2,55.5c-.2.1-5.6,2.9-12.3,2.9s-1.1,0-1.6,0c1,2,1.5,3.5,1.5,3.6.2.5,0,1.1-.4,1.5-.4.4-1,.5-1.5.4-.2,0-3.5-1.1-7.1-3.6v5.9c0,.4-.3.7-.7.7h-1.5c-.4,0-.7-.3-.7-.7v-5.9c-3.6,2.5-6.9,3.6-7.1,3.6-.5.2-1.1,0-1.5-.4-.4-.4-.5-1-.4-1.5,0,0,.5-1.6,1.5-3.6-.5,0-1,0-1.6,0-6.7,0-12.1-2.8-12.3-2.9-.3-.1-.5-.4-.6-.6-.4-.7-.1-1.6.6-2,.1,0,3-1.6,7.1-2.4-5.9-6.9-7.7-14.9-7.8-15.2-.1-.5,0-1,.4-1.4.3-.3.7-.4,1-.4s.2,0,.3,0c.4,0,8,1.8,14.8,7.3,0-.1,0-.3,0-.4,0-10.9,5.5-19.7,5.8-20,.3-.4.7-.7,1.2-.7.5,0,1,.3,1.2.7.2.4,5.8,9.1,5.8,20s0,.3,0,.4c6.8-5.5,14.4-7.3,14.8-7.3.1,0,.2,0,.3,0,.4,0,.8.2,1,.4.4.4.5.9.4,1.4,0,.4-1.9,8.3-7.8,15.2,4.1.8,6.9,2.3,7.1,2.4.5.3.8.8.8,1.3,0,.5-.3,1-.8,1.3Z",
+];
+
+function Logo({ size = 22 }) {
+  const height = size * 1.3;
+  return (
+    <a href="desktop.html" className="logo" aria-label="WeedSpot">
+      <svg height={height} viewBox="0 0 412.9 98.2" role="img" aria-hidden="false">
+        <g className="leaf">{LEAF_PATHS.map((d, i) => <path key={i} d={d}/>)}</g>
+        <g className="word">{WORDMARK_PATHS.map((d, i) => <path key={i} d={d}/>)}</g>
+      </svg>
+    </a>
+  );
+}
+
+const Ic = (size, kids, fill = "none") => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor"
+       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>{kids}</svg>
+);
+const SearchIc  = (p={}) => Ic(p.size||18, <><circle cx="11" cy="11" r="7"/><path d="M20 20 16 16"/></>);
+const BellIc    = (p={}) => Ic(p.size||18, <><path d="M6 9 C 6 5.5, 8.5 3, 12 3 C 15.5 3, 18 5.5, 18 9 L 18 13 L 20 17 L 4 17 L 6 13 Z"/><path d="M10 20 C 10.5 21, 11.2 21.5, 12 21.5 C 12.8 21.5, 13.5 21, 14 20"/></>);
+const UserIc    = (p={}) => Ic(p.size||18, <><circle cx="12" cy="8" r="4"/><path d="M4 21 C 4 16, 7.5 14, 12 14 C 16.5 14, 20 16, 20 21"/></>);
+const CloseIc   = (p={}) => Ic(p.size||18, <><path d="M5 5 19 19"/><path d="M19 5 5 19"/></>);
+const PlusIc    = (p={}) => Ic(p.size||18, <><path d="M12 5 12 19"/><path d="M5 12 19 12"/></>);
+const MinusIc   = (p={}) => Ic(p.size||18, <path d="M5 12 19 12"/>);
+const LocateIc  = (p={}) => Ic(p.size||18, <><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1 12 4"/><path d="M12 20 12 23"/><path d="M1 12 4 12"/><path d="M20 12 23 12"/></>);
+const LayersIc  = (p={}) => Ic(p.size||18, <><path d="M12 3 2 9 12 15 22 9 Z"/><path d="M2 15 12 21 22 15"/></>);
+const ResetIc   = (p={}) => Ic(p.size||14, <><path d="M3 12 A 9 9 0 1 0 6 5"/><path d="M3 5 3 9 7 9"/></>);
+const VerifIc   = (p={}) => Ic(p.size||14, <><circle cx="12" cy="12" r="9"/><path d="M8 12 11 15 16 9"/></>);
+const ClockIc   = (p={}) => Ic(p.size||14, <><circle cx="12" cy="12" r="9"/><path d="M12 7 12 12 16 14"/></>);
+const ShareIc   = (p={}) => Ic(p.size||16, <><path d="M12 4 12 16"/><path d="M7 9 12 4 17 9"/><path d="M5 14 5 20 19 20 19 14"/></>);
+const PhoneIc   = (p={}) => Ic(p.size||16, <path d="M5 3 8 3 10 8 7 10 C 8 13, 11 16, 14 17 L 16 14 21 16 21 19 C 21 20, 20 21, 19 21 C 10 21, 3 14, 3 5 C 3 4, 4 3, 5 3 Z"/>);
+const DirIc     = (p={}) => Ic(p.size||16, <><path d="M12 2 L 22 12 L 12 22 L 2 12 Z"/><path d="M8 12 16 12"/><path d="M13 9 16 12 13 15"/></>);
+const BookmarkIc= (p={}) => (
+  <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill={p.filled?"currentColor":"none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}><path d="M6 3 18 3 18 21 12 17 6 21 Z"/></svg>
+);
+
+// ──────────────────────────────────────────────────────────────────────────
+// HEADER
+// ──────────────────────────────────────────────────────────────────────────
+function Header({ onSearch, onSaved, onNotifications }) {
+  return (
+    <header className="site" id="top">
+      <div className="container row">
+        <Logo size={31}/>
+        <nav className="primary">
+          <a href="mapa.html">Mapa</a>
+          <a href="/obchody">Obchody</a>
+          <a href="/znacky">Značky</a>
+          <a href="/produkty">Produkty</a>
+          <a href="/akce">Akce</a>
+          <a href="/eventy">Eventy</a>
+          <a href="/edukace">Edukace</a>
+          <a href="/komunita">Komunita</a>
+        </nav>
+        <div className="actions">
+          <button className="icon-btn menu-toggle" title="Menu" onClick={() => alert("Menu — brzy")}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6 21 6"/><path d="M3 12 21 12"/><path d="M3 18 21 18"/></svg>
+          </button>
+          <button className="icon-btn" onClick={onSearch} title="Hledat"><SearchIc size={18}/></button>
+          <button className="icon-btn" onClick={onNotifications} title="Notifikace"><BellIc size={18}/></button>
+          <button className="icon-btn" onClick={onSaved} title="Uložené"><BookmarkIc size={18}/></button>
+          <button className="btn primary" onClick={() => alert("Přihlášení – brzy 🌱")}>
+            <UserIc size={16}/>Přihlásit
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// MAP — Leaflet integration
+// ──────────────────────────────────────────────────────────────────────────
+const TILE_LAYERS = {
+  voyager: {
+    name: "Stylizovaná",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &middot; &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 19,
+    dark: false,
+  },
+  positron: {
+    name: "Světlá",
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; OpenStreetMap &middot; &copy; CARTO',
+    subdomains: "abcd",
+    maxZoom: 19,
+    dark: false,
+  },
+  dark: {
+    name: "Tmavá",
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; OpenStreetMap &middot; &copy; CARTO',
+    subdomains: "abcd",
+    maxZoom: 19,
+    dark: true,
+  },
+};
+
+function makePinHTML(spot, isActive) {
+  const cd = CATEGORIES.find(c => c.id === spot.cat);
+  const color = cd?.hex || "#3D5132";
+  const closed = !spot.open;
+  return `
+    <div class="ws-pin ${isActive ? "active" : ""} ${closed ? "closed" : ""}" data-id="${spot.id}">
+      <svg width="36" height="44" viewBox="0 0 36 44">
+        <path d="M 18 2 C 9 2, 2 9, 2 18 C 2 28, 18 42, 18 42 C 18 42, 34 28, 34 18 C 34 9, 27 2, 18 2 Z"
+              fill="${color}" stroke="white" stroke-width="2.5"/>
+        <text x="18" y="24" text-anchor="middle" font-size="14" fill="white">${cd?.icon || "·"}</text>
+      </svg>
+    </div>
+  `;
+}
+
+function makePinIcon(spot, isActive) {
+  return L.divIcon({
+    html: makePinHTML(spot, isActive),
+    className: "ws-pin-icon",
+    iconSize: [36, 44],
+    iconAnchor: [18, 44],
+    popupAnchor: [0, -42],
+  });
+}
+
+function buildPopupHTML(spot) {
+  const cd = CATEGORIES.find(c => c.id === spot.cat);
+  const tone = TONE[spot.img] || "var(--moss-700)";
+  return `
+    <div class="ws-popup">
+      <div class="hero" style="background: ${tone}">
+        <span class="badge">${cd?.label || ""}</span>
+        <span style="position:relative;z-index:1;opacity:0.55">${cd?.icon || ""}</span>
+      </div>
+      <div class="body">
+        <div class="name">${spot.name}</div>
+        <div class="row">
+          <span class="${spot.open ? 'open' : 'closed'}">${spot.open ? '● Otevřeno' : '○ Zavřeno'}</span>
+          <span>·</span>
+          <span>${spot.hours}</span>
+          <span>·</span>
+          <span class="rt">★ ${spot.rating}</span>
+          <span style="color:var(--muted)">(${spot.reviews})</span>
+        </div>
+        <div class="addr">${spot.address}</div>
+        <div class="actions">
+          <button class="pop-btn primary" data-action="open" data-id="${spot.id}">Detail →</button>
+          <button class="pop-btn" data-action="dir" data-id="${spot.id}">Trasa</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// FILTERS LOGIC
+// ──────────────────────────────────────────────────────────────────────────
+const SORTS = [
+  { id: "rating",   label: "Nejlepší hodnocení" },
+  { id: "name",     label: "Abecedně" },
+  { id: "reviews",  label: "Nejvíc recenzí" },
+  { id: "open",     label: "Otevřeno teď" },
+];
+
+function useFilteredSpots({ q, cats, openOnly, verifiedOnly, minRating, city, sort }) {
+  return useMemo(() => {
+    let list = SPOTS.slice();
+    if (city && city !== "all") list = list.filter(s => s.city === city);
+    if (cats.length > 0) list = list.filter(s => cats.includes(s.cat));
+    if (openOnly) list = list.filter(s => s.open);
+    if (verifiedOnly) list = list.filter(s => s.verified);
+    if (minRating > 0) list = list.filter(s => s.rating >= minRating);
+    if (q) {
+      const qq = q.toLowerCase();
+      list = list.filter(s =>
+        s.name.toLowerCase().includes(qq) ||
+        s.area.toLowerCase().includes(qq) ||
+        s.address.toLowerCase().includes(qq) ||
+        s.tags.some(t => t.toLowerCase().includes(qq))
+      );
+    }
+    list.sort((a, b) => {
+      switch (sort) {
+        case "name":    return a.name.localeCompare(b.name, "cs");
+        case "reviews": return b.reviews - a.reviews;
+        case "open":    return (b.open ? 1 : 0) - (a.open ? 1 : 0);
+        default:        return b.rating - a.rating;
+      }
+    });
+    return list;
+  }, [q, cats, openOnly, verifiedOnly, minRating, city, sort]);
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// SIDEBAR (filters + results list)
+// ──────────────────────────────────────────────────────────────────────────
+function Sidebar({
+  q, setQ,
+  cats, toggleCat, clearCats,
+  openOnly, setOpenOnly,
+  verifiedOnly, setVerifiedOnly,
+  minRating, setMinRating,
+  city, setCity,
+  sort, setSort,
+  results,
+  activeId, setActiveId, openDetail,
+  onReset,
+}) {
+  return (
+    <aside className="sidebar">
+      <div className="filters">
+        <div className="search-row">
+          <SearchIc size={16}/>
+          <input
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            placeholder="Hledat název, čtvrť, tag…"
+          />
+          {q && <button className="clear" onClick={() => setQ("")} aria-label="Vymazat"><CloseIc size={14}/></button>}
+        </div>
+
+        <div className="filter-label">Kategorie</div>
+        <div className="chip-row">
+          <button className={"chip" + (cats.length === 0 ? " active" : "")} onClick={clearCats}>Vše</button>
+          {CATEGORIES.map(c => (
+            <button
+              key={c.id}
+              className={"chip" + (cats.includes(c.id) ? " active" : "")}
+              onClick={() => toggleCat(c.id)}
+            >
+              <span className="ic">{c.icon}</span>{c.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="filter-label">Město</div>
+        <select className="city-select" value={city} onChange={e => setCity(e.target.value)}>
+          {CITIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+        </select>
+
+        <div className="filter-label">Filtry</div>
+        <div className="toggle-row">
+          <div className="l">
+            <ClockIc size={14}/>
+            <span>Otevřeno teď<span className="desc"> · jen aktuální</span></span>
+          </div>
+          <button className={"switch" + (openOnly ? " on" : "")} onClick={() => setOpenOnly(!openOnly)} aria-label="Otevřeno teď"></button>
+        </div>
+        <div className="toggle-row">
+          <div className="l">
+            <VerifIc size={14}/>
+            <span>Ověřeno komunitou<span className="desc"> · zkontrolováno</span></span>
+          </div>
+          <button className={"switch" + (verifiedOnly ? " on" : "")} onClick={() => setVerifiedOnly(!verifiedOnly)} aria-label="Ověřeno"></button>
+        </div>
+
+        <div className="filter-label">Min. hodnocení</div>
+        <div className="slider-row">
+          <input
+            type="range" min="0" max="5" step="0.1" value={minRating}
+            onChange={e => setMinRating(parseFloat(e.target.value))}
+          />
+          <span className="v">{minRating === 0 ? "vše" : `★ ${minRating.toFixed(1)}`}</span>
+        </div>
+
+        <button className="reset-btn" onClick={onReset}>
+          <ResetIc size={13}/> Resetovat filtry
+        </button>
+      </div>
+
+      <div className="results-head">
+        <div className="count">
+          {results.length} {results.length === 1 ? "spot" : results.length < 5 ? "spoty" : "spotů"}
+        </div>
+        <select
+          className="sort"
+          value={sort}
+          onChange={e => setSort(e.target.value)}
+          style={{ background: "transparent", border: "none", color: "var(--muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+        >
+          {SORTS.map(s => <option key={s.id} value={s.id}>Řadit: {s.label}</option>)}
+        </select>
+      </div>
+
+      <div className="results-list" id="results-list">
+        {results.map(s => {
+          const cd = CATEGORIES.find(c => c.id === s.cat);
+          const tone = TONE[s.img];
+          const active = activeId === s.id;
+          return (
+            <div
+              key={s.id}
+              id={`r-${s.id}`}
+              className={"result-card" + (active ? " active" : "")}
+              onClick={() => setActiveId(s.id)}
+              onDoubleClick={() => openDetail(s.id)}
+            >
+              <div className="thumb" style={{ background: tone }}>{cd?.icon}</div>
+              <div className="body">
+                <div className="name">{s.name}</div>
+                <div className="meta">
+                  <span className={s.open ? "open" : "closed"}>{s.open ? "●" : "○"}</span>
+                  <span className="city">{s.area}</span>
+                  <span>·</span>
+                  <span className="rt">★ {s.rating}</span>
+                  {s.verified && <>
+                    <span>·</span>
+                    <span className="verif"><VerifIc size={10}/> ověřeno</span>
+                  </>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {results.length === 0 && (
+          <div className="empty-state">
+            <div className="big">Pro tyto filtry nemáme spot.</div>
+            <div style={{ fontSize: 13 }}>Zkus rozšířit kategorii nebo změnit město.</div>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// MAP CANVAS
+// ──────────────────────────────────────────────────────────────────────────
+function MapCanvas({ spots, activeId, setActiveId, openDetail, city, setCity, layer, setLayer }) {
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const tileRef = useRef(null);
+  const markersRef = useRef(new Map()); // id -> marker
+  const layerGroupRef = useRef(null);
+  const meMarkerRef = useRef(null);
+  const popupRef = useRef(null);
+
+  // Init map
+  useEffect(() => {
+    if (mapRef.current) return;
+    const map = L.map(containerRef.current, {
+      center: [49.74, 15.34],
+      zoom: 7,
+      minZoom: 6,
+      maxZoom: 18,
+      zoomControl: false,
+      attributionControl: false,
+      maxBounds: [[48.0, 11.0], [51.5, 19.5]],
+      maxBoundsViscosity: 0.85,
+      worldCopyJump: false,
+    });
+    mapRef.current = map;
+
+    const cfg = TILE_LAYERS[layer] || TILE_LAYERS.voyager;
+    tileRef.current = L.tileLayer(cfg.url, {
+      attribution: cfg.attribution,
+      subdomains: cfg.subdomains,
+      maxZoom: cfg.maxZoom,
+    }).addTo(map);
+
+    layerGroupRef.current = L.layerGroup().addTo(map);
+
+    // delegate popup button clicks
+    map.on("popupopen", (e) => {
+      popupRef.current = e.popup;
+      const node = e.popup.getElement();
+      if (!node) return;
+      node.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const id = parseInt(btn.dataset.id, 10);
+          const action = btn.dataset.action;
+          if (action === "open") openDetail(id);
+          else if (action === "dir") {
+            const sp = SPOTS.find(s => s.id === id);
+            if (sp) window.open(`https://mapy.cz/zakladni?source=coor&id=${sp.lng},${sp.lat}`, "_blank");
+          }
+        });
+      });
+    });
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+    // eslint-disable-next-line
+  }, []);
+
+  // Switch tile layer
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const cfg = TILE_LAYERS[layer] || TILE_LAYERS.voyager;
+    if (tileRef.current) mapRef.current.removeLayer(tileRef.current);
+    tileRef.current = L.tileLayer(cfg.url, {
+      attribution: cfg.attribution,
+      subdomains: cfg.subdomains,
+      maxZoom: cfg.maxZoom,
+    }).addTo(mapRef.current);
+    document.documentElement.classList.toggle("dark-map", false); // tile layers handle their own colors
+  }, [layer]);
+
+  // Rebuild markers when filtered spots change
+  useEffect(() => {
+    if (!mapRef.current || !layerGroupRef.current) return;
+    layerGroupRef.current.clearLayers();
+    markersRef.current.clear();
+    spots.forEach(s => {
+      const m = L.marker([s.lat, s.lng], { icon: makePinIcon(s, s.id === activeId) });
+      m.bindPopup(buildPopupHTML(s), { closeButton: true, offset: [0, -8], maxWidth: 280 });
+      m.on("click", () => {
+        setActiveId(s.id);
+        // scroll the result card into view
+        const el = document.getElementById(`r-${s.id}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+      m.addTo(layerGroupRef.current);
+      markersRef.current.set(s.id, m);
+    });
+  }, [spots]);
+
+  // Update active pin styling without rebuilding
+  useEffect(() => {
+    markersRef.current.forEach((m, id) => {
+      const sp = spots.find(s => s.id === id);
+      if (!sp) return;
+      m.setIcon(makePinIcon(sp, id === activeId));
+    });
+    // open popup + center on active
+    if (activeId && markersRef.current.has(activeId)) {
+      const m = markersRef.current.get(activeId);
+      const sp = spots.find(s => s.id === activeId);
+      if (mapRef.current && sp) {
+        const z = Math.max(mapRef.current.getZoom(), 13);
+        mapRef.current.flyTo([sp.lat, sp.lng], z, { duration: 0.7 });
+      }
+      m.openPopup();
+    }
+    // eslint-disable-next-line
+  }, [activeId]);
+
+  // City change → fly to
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const c = CITIES.find(x => x.id === city);
+    if (!c) return;
+    mapRef.current.flyTo(c.center, c.zoom, { duration: 0.9 });
+  }, [city]);
+
+  const onZoomIn  = () => mapRef.current?.zoomIn();
+  const onZoomOut = () => mapRef.current?.zoomOut();
+  const onResetView = () => mapRef.current?.flyTo([49.74, 15.34], 7, { duration: 0.7 });
+  const onLocate = () => {
+    if (!navigator.geolocation || !mapRef.current) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const ll = [pos.coords.latitude, pos.coords.longitude];
+        if (meMarkerRef.current) meMarkerRef.current.remove();
+        const icon = L.divIcon({
+          html: `<div class="ws-me"><div class="pulse"></div><div class="dot"></div></div>`,
+          className: "ws-pin-icon",
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
+        });
+        meMarkerRef.current = L.marker(ll, { icon, interactive: false }).addTo(mapRef.current);
+        mapRef.current.flyTo(ll, 13, { duration: 0.9 });
+      },
+      () => alert("Polohu se nepodařilo zjistit. Povol prosím přístup k poloze."),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
+  return (
+    <div className="map-wrap">
+      <div id="map" ref={containerRef}/>
+
+      <div className="city-strip">
+        {CITIES.map(c => (
+          <button
+            key={c.id}
+            className={c.id === city ? "active" : ""}
+            onClick={() => setCity(c.id)}
+          >{c.label}</button>
+        ))}
+      </div>
+
+      <div className="map-controls">
+        <div className="ctrl-stack">
+          <button onClick={onZoomIn} title="Přiblížit"><PlusIc size={18}/></button>
+          <button onClick={onZoomOut} title="Oddálit"><MinusIc size={18}/></button>
+        </div>
+        <button className="map-ctrl" onClick={onLocate} title="Najdi mě"><LocateIc size={18}/></button>
+        <button className="map-ctrl" onClick={onResetView} title="Celá ČR"><ResetIc size={16}/></button>
+        <button
+          className="map-ctrl"
+          onClick={() => {
+            const order = ["voyager", "positron", "dark"];
+            const next = order[(order.indexOf(layer) + 1) % order.length];
+            setLayer(next);
+          }}
+          title={`Mapový styl: ${TILE_LAYERS[layer].name}`}
+        >
+          <LayersIc size={18}/>
+        </button>
+      </div>
+
+      <div className="map-info">
+        <span><strong>{spots.length}</strong> spot{spots.length === 1 ? "" : spots.length < 5 ? "y" : "ů"}</span>
+        <div className="sep"/>
+        <span>📍 <strong>{(CITIES.find(c => c.id === city) || CITIES[0]).label}</strong></span>
+        <div className="sep"/>
+        <span>Klikni na pin pro detail</span>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// DETAIL DRAWER
+// ──────────────────────────────────────────────────────────────────────────
+function DetailDrawer({ spotId, onClose, savedIds, toggleSave, showToast }) {
+  const spot = SPOTS.find(s => s.id === spotId);
+  if (!spot) return null;
+  const cd = CATEGORIES.find(c => c.id === spot.cat);
+  const heroBg = TONE[spot.img] || "var(--moss-700)";
+  const isSaved = savedIds.has(spot.id);
+  const cc = CAT_BADGE[cd.color];
+  const days = [
+    ["Pondělí", "9:00 – 21:00"],
+    ["Úterý",   "9:00 – 21:00"],
+    ["Středa",  "9:00 – 21:00", true],
+    ["Čtvrtek", "9:00 – 21:00"],
+    ["Pátek",   "9:00 – 23:00"],
+    ["Sobota",  "10:00 – 23:00"],
+    ["Neděle",  "10:00 – 20:00"],
+  ];
+
+  return (
+    <>
+      <div className="drawer-backdrop" onClick={onClose}/>
+      <div className="drawer">
+        <div className="drawer-hero" style={{ background: heroBg }}>
+          <div className="icon">{cd?.icon}</div>
+          <div className="controls">
+            <button className="circle-btn" onClick={onClose}><CloseIc size={18}/></button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="circle-btn" onClick={() => showToast("Sdílení zkopírováno")}><ShareIc size={16}/></button>
+              <button className="circle-btn" onClick={() => toggleSave(spot.id)} style={{ color: isSaved ? "var(--accent)" : "var(--ink)" }}>
+                <BookmarkIc size={16} filled={isSaved}/>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="drawer-body">
+          <div className="pills">
+            <span className="pill" style={{ background: cc.bg, color: cc.fg }}>{cd.label}</span>
+            <span className="pill" style={{ background: spot.open ? "var(--moss-100)" : "var(--cream-100)", color: spot.open ? "var(--moss-900)" : "var(--terracotta-700)" }}>
+              {spot.open ? "● Otevřeno" : "○ Zavřeno"} · {spot.hours}
+            </span>
+            {spot.verified && (
+              <span className="pill" style={{ background: "var(--moss-100)", color: "var(--moss-900)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <VerifIc size={11}/> Ověřeno
+              </span>
+            )}
+          </div>
+          <h2 style={{ marginTop: 12 }}>{spot.name}</h2>
+          <div className="info-row">
+            <span className="rt">★ {spot.rating}</span>
+            <span>({spot.reviews} recenzí)</span>
+            <span>·</span>
+            <span>{spot.area}</span>
+          </div>
+
+          <div className="actions-grid">
+            <button className="action-btn primary" onClick={() => window.open(`https://mapy.cz/zakladni?source=coor&id=${spot.lng},${spot.lat}`, "_blank")}>
+              <DirIc size={14}/>Trasa
+            </button>
+            <button className="action-btn" onClick={() => showToast("Volám…")}><PhoneIc size={14}/>Volat</button>
+            <button className="action-btn" onClick={() => { navigator.clipboard?.writeText(window.location.href); showToast("Odkaz zkopírován"); }}>
+              <ShareIc size={14}/>Sdílet
+            </button>
+          </div>
+
+          <h3>O místě</h3>
+          <p className="desc">{spot.desc}</p>
+          <div className="tag-row">
+            {spot.tags.map(t => <span key={t} className="tag">{t}</span>)}
+          </div>
+
+          <h3>Otevírací doba</h3>
+          <div className="hours-card">
+            {days.map(([d, h, today]) => (
+              <div key={d} className={"hours-row" + (today ? " today" : "")}>
+                <span>{d}{today ? " · dnes" : ""}</span>
+                <span>{h}</span>
+              </div>
+            ))}
+          </div>
+
+          <h3>Adresa</h3>
+          <div className="addr-card">
+            <div>
+              <div className="a">{spot.address}</div>
+              <div className="b">{spot.area} · GPS {spot.lat.toFixed(4)}, {spot.lng.toFixed(4)}</div>
+            </div>
+            <button
+              className="btn primary sm"
+              onClick={() => window.open(`https://mapy.cz/zakladni?source=coor&id=${spot.lng},${spot.lat}`, "_blank")}
+            >Otevřít</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// FOOTER (mini)
+// ──────────────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer className="mini">
+      <div className="container row">
+        <span>© 2026 WeedSpot s.r.o. · IČO 12345678 · Praha</span>
+        <div className="links">
+          <a href="desktop.html">Domů</a>
+          <a href="index.html">Aplikace</a>
+          <a href="#">Pro podniky</a>
+          <a href="#">Kontakt</a>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// APP
+// ──────────────────────────────────────────────────────────────────────────
+function App() {
+  const [q, setQ] = useState("");
+  const [cats, setCats] = useState([]);
+  const [openOnly, setOpenOnly] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [minRating, setMinRating] = useState(0);
+  const [city, setCity] = useState("all");
+  const [sort, setSort] = useState("rating");
+  const [layer, setLayer] = useState("voyager");
+  const [activeId, setActiveId] = useState(null);
+  const [openSpotId, setOpenSpotId] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const [savedIds, setSavedIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("ws-saved") || "[1,4]")); }
+    catch { return new Set([1, 4]); }
+  });
+  useEffect(() => { localStorage.setItem("ws-saved", JSON.stringify([...savedIds])); }, [savedIds]);
+
+  const showToast = useCallback((m) => { setToast(m); setTimeout(() => setToast(null), 1800); }, []);
+  const toggleSave = useCallback((id) => {
+    setSavedIds(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) { n.delete(id); showToast("Odebráno z uložených"); }
+      else { n.add(id); showToast("Uloženo"); }
+      return n;
+    });
+  }, [showToast]);
+
+  const toggleCat = useCallback((id) => {
+    setCats(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }, []);
+  const clearCats = useCallback(() => setCats([]), []);
+
+  const onReset = useCallback(() => {
+    setQ(""); setCats([]); setOpenOnly(false); setVerifiedOnly(false);
+    setMinRating(0); setCity("all"); setSort("rating");
+    showToast("Filtry resetovány");
+  }, [showToast]);
+
+  const filtered = useFilteredSpots({ q, cats, openOnly, verifiedOnly, minRating, city, sort });
+  const totalCount = SPOTS.length;
+  const openCount = useMemo(() => filtered.filter(s => s.open).length, [filtered]);
+
+  return (
+    <>
+      <Header
+        onSearch={() => showToast("Globální vyhledávání — brzy")}
+        onSaved={() => showToast(`${savedIds.size} uložených spotů`)}
+        onNotifications={() => showToast("Žádné nové notifikace")}
+      />
+
+      <div className="page-head">
+        <div>
+          <span className="eyebrow">● Mapa · Česká republika</span>
+          <h1>Najdi <em>friendly</em> podnik kdekoliv v ČR.</h1>
+          <p className="lead">
+            {totalCount} ověřených spotů napříč 11 městy. Filtruj podle kategorie, otevírací doby, hodnocení.
+            Klikni na pin nebo položku v seznamu pro detail.
+          </p>
+        </div>
+        <div className="legend">
+          {CATEGORIES.map(c => (
+            <div key={c.id} className="legend-item">
+              <span className="swatch" style={{ background: c.hex }}/>
+              <span>{c.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <main className="map-shell">
+        <Sidebar
+          q={q} setQ={setQ}
+          cats={cats} toggleCat={toggleCat} clearCats={clearCats}
+          openOnly={openOnly} setOpenOnly={setOpenOnly}
+          verifiedOnly={verifiedOnly} setVerifiedOnly={setVerifiedOnly}
+          minRating={minRating} setMinRating={setMinRating}
+          city={city} setCity={setCity}
+          sort={sort} setSort={setSort}
+          results={filtered}
+          activeId={activeId} setActiveId={setActiveId}
+          openDetail={setOpenSpotId}
+          onReset={onReset}
+        />
+        <MapCanvas
+          spots={filtered}
+          activeId={activeId} setActiveId={setActiveId}
+          openDetail={setOpenSpotId}
+          city={city} setCity={setCity}
+          layer={layer} setLayer={setLayer}
+        />
+      </main>
+
+      <Footer/>
+
+      {openSpotId && (
+        <DetailDrawer
+          spotId={openSpotId}
+          onClose={() => setOpenSpotId(null)}
+          savedIds={savedIds}
+          toggleSave={toggleSave}
+          showToast={showToast}
+        />
+      )}
+      {toast && <div className="toast">{toast}</div>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

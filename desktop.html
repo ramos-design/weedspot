@@ -673,7 +673,7 @@ function Header({ onSearch, onMenu, onSaved, onLogin, onNotifications }) {
       <div className="container row">
         <Logo size={31}/>
         <nav className="primary">
-          <a href="/mapa">Mapa</a>
+          <a href="mapa.html">Mapa</a>
           <a href="/obchody">Obchody</a>
           <a href="/znacky">Značky</a>
           <a href="/produkty">Produkty</a>
@@ -891,7 +891,7 @@ function MapSection({ onOpenSpot, onAdd }) {
           </div>
           <div className="right" style={{ display: "flex", gap: 8 }}>
             <button className="btn ghost" onClick={onAdd}><PlusIc size={16}/>Přidat spot</button>
-            <a href="index.html" className="btn primary"><MapIc size={16}/>Otevřít plnou mapu</a>
+            <a href="mapa.html" className="btn primary"><MapIc size={16}/>Otevřít plnou mapu</a>
           </div>
         </div>
         <div className="map-preview">
@@ -1090,7 +1090,7 @@ function Footer() {
           <div>
             <h4>Produkt</h4>
             <ul>
-              <li><a href="#discover">Mapa</a></li>
+              <li><a href="mapa.html">Mapa</a></li>
               <li><a href="#categories">Kategorie</a></li>
               <li><a href="index.html">Mobilní aplikace</a></li>
               <li><a href="#how">Jak to funguje</a></li>
@@ -1356,7 +1356,7 @@ function MobileMenu({ onClose, onSearch, onAdd }) {
         <div className="modal-body">
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {[
-              ["/mapa", "Mapa"],
+              ["mapa.html", "Mapa"],
               ["/obchody", "Obchody"],
               ["/znacky", "Značky"],
               ["/produkty", "Produkty"],
